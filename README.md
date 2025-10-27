@@ -5,7 +5,7 @@ a powerful grounding to applications that want to deliver customized generative 
 
 ## Install the prerequisites
 
-### Method 1:
+### Method 1: Replicate the Virtual Enviroment
 Use the `requirements.txt` to install all dependencies
 
 ```bash
@@ -29,20 +29,13 @@ pip install -r requirements.txt
 ### Method 3: Using Conda Environment
  
 ```bash
-# first clone the repository 
-
+# Clone the repository 
 git clone https://github.com/BharAI-Lab/rag_azure_fastapi.git
-
-# now create a conda environment
-
+# Create a conda environment
 conda create -n rag_azure_fastapi  python=3.10 -y
-
-# activate conda environment 
-
+# Activate conda environment 
 conda activate rag_azure_fastapi
-
-# install all dependencies using requirements.txt file
-
+# Install all dependencies using requirements.txt file
 pip install -r requirements.txt
 ```
 ### Add your keys
