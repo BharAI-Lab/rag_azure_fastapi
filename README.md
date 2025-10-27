@@ -12,8 +12,7 @@ python -m venv .venv
 ./.venv/bin/pip install -r requirements.txt
 ```
 ### Method 3: Using Conda Environment
-
-## Create conda environment 
+ 
 ```bash
 # first clone the repository 
 
