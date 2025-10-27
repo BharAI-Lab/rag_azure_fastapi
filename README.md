@@ -11,7 +11,25 @@ Use the `requirements.txt` to install all dependencies
 python -m venv .venv
 ./.venv/bin/pip install -r requirements.txt
 ```
+### Method 3: Using Conda Environment
+ 
+```bash
+# first clone the repository 
 
+git clone https://github.com/BharAI-Lab/rag_azure_fastapi.git
+
+# now create a conda environment
+
+conda create -n rag_azure_fastapi  python=3.10 -y
+
+# activate conda environment 
+
+conda activate rag_azure_fastapi
+
+# install all dependencies using requirements.txt file
+
+pip install -r requirements.txt
+```
 ### Add your keys
 
 Find the Azure OpenAI Keys in the Azure OpenAI Service. Note, that keys aren't in the studio, but in the resource itself. Add them to a local `.env` file. This repository ignores the `.env` file to prevent you (and me) from adding these keys by mistake.
