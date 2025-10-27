@@ -11,6 +11,21 @@ Use the `requirements.txt` to install all dependencies
 python -m venv .venv
 ./.venv/bin/pip install -r requirements.txt
 ```
+# OR
+# Create conda environment 
+
+# first clone the repository 
+
+git clone https://github.com/BharAI-Lab/rag_azure_fastapi.git
+
+# now create a conda environment
+conda create -n rag_azure_fastapi  python=3.10 -y
+
+# activate conda environment 
+ conda activate rag_azure_fastapi
+
+# install all dependencies using requirements.txt file
+pip install -r requirements.txt
 
 ### Add your keys
 
