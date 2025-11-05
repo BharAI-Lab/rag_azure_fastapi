@@ -17,8 +17,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      IMAGE_REF: ${{ steps.ref.outputs.IMAGE_REF }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,14 +38,9 @@ jobs:
         id: build
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ./Dockerfile
           push: true
-          tags: ghcr.io/${{ env.REPO }}:latest
-
-      - name: Image ref by digest
-        id: ref
-        run: echo "IMAGE_REF=ghcr.io/${REPO}@${{ steps.build.outputs.digest }}" >> $GITHUB_OUTPUT
+          tags: ghcr.io/${{ env.REPO }}:${{ github.sha }}
+          file: ./Dockerfile
 
   deploy:
     runs-on: ubuntu-latest
@@ -61,38 +54,15 @@ jobs:
       - name: Lowercase repo
         run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
-      - name: Ensure Container Apps extension
-        run: |
-          az config set extension.use_dynamic_install=yes_without_prompt
-          az extension add -n containerapp --upgrade -y || true
+      - name: Deploy to Azure Container Apps
+        uses: azure/CLI@v2
+        with:
+          inlineScript: |
+            az config set extension.use_dynamic_install=yes_without_prompt
+            az extension add -n containerapp --upgrade -y || true
 
-      - name: Bind GHCR registry (pull with PAT)
-        run: |
-          az containerapp registry set \
-            -n "${{ env.AZURE_CONTAINER_APP_NAME }}" \
-            -g "${{ env.AZURE_GROUP_NAME }}" \
-            --server ghcr.io \
-            --username "${{ github.actor }}" \
-            --password "${{ secrets.PAT }}"
+            # GHCR is private: configure registry with the same PAT (username = PAT owner)
+            az containerapp registry set -n ${{env.AZURE_CONTAINER_APP_NAME}} -g ${{env.AZURE_GROUP_NAME}} --server ghcr.io --username ${{ github.actor }} --password ${{ secrets.PAT }}
 
-      - name: Update image, env vars, and resources
-        env:
-          IMAGE_REF: ${{ needs.build.outputs.IMAGE_REF }}
-        run: |
-          az containerapp update \
-            -n "${{ env.AZURE_CONTAINER_APP_NAME }}" \
-            -g "${{ env.AZURE_GROUP_NAME }}" \
-            --image "${IMAGE_REF}" \
-            --cpu 2 --memory 4Gi \
-            --set-env-vars \
-              AZURE_OPENAI_ENDPOINT=${{ vars.AZURE_OPENAI_ENDPOINT }} \
-              AZURE_OPENAI_KEY=${{ secrets.AZURE_OPENAI_KEY }} \
-              AZURE_OPENAI_API_VERSION=${{ vars.AZURE_OPENAI_API_VERSION }} \
-              AZURE_OPENAI_CHAT_DEPLOYMENT=${{ vars.AZURE_OPENAI_CHAT_DEPLOYMENT }} \
-              AZURE_OPENAI_EMBEDDING_DEPLOYMENT=${{ vars.AZURE_OPENAI_EMBEDDING_DEPLOYMENT }} \
-              AZURE_SEARCH_ENDPOINT=${{ vars.AZURE_SEARCH_ENDPOINT }} \
-              AZURE_SEARCH_API_KEY=${{ secrets.AZURE_SEARCH_API_KEY }} \
-              AZURE_SEARCH_INDEX_NAME=${{ vars.AZURE_SEARCH_INDEX_NAME }} \
-              TOP_K=${{ vars.TOP_K }} \
-              TEMPERATURE=${{ vars.TEMPERATURE }} \
-              MAX_TOKENS=${{ vars.MAX_TOKENS }}
+            # Set resources, env vars, and update image
+            az containerapp update -n ${{ env.AZURE_CONTAINER_APP_NAME  }} -g ${{ env.AZURE_GROUP_NAME  }} --cpu 2 --memory 4Gi --set-env-vars AZURE_OPENAI_ENDPOINT=${{ vars.AZURE_OPENAI_ENDPOINT }} AZURE_OPENAI_KEY=${{ secrets.AZURE_OPENAI_KEY }} AZURE_OPENAI_API_VERSION=${{ vars.AZURE_OPENAI_API_VERSION }} AZURE_OPENAI_CHAT_DEPLOYMENT=${{ vars.AZURE_OPENAI_CHAT_DEPLOYMENT }} AZURE_OPENAI_EMBEDDING_DEPLOYMENT=${{ vars.AZURE_OPENAI_EMBEDDING_DEPLOYMENT }} AZURE_SEARCH_ENDPOINT=${{ vars.AZURE_SEARCH_ENDPOINT }} AZURE_SEARCH_API_KEY=${{ secrets.AZURE_SEARCH_API_KEY }} AZURE_SEARCH_INDEX_NAME=${{ vars.AZURE_SEARCH_INDEX_NAME }} TOP_K=${{ vars.TOP_K }} TEMPERATURE=${{ vars.TEMPERATURE }} MAX_TOKENS=${{ vars.MAX_TOKENS }} --image ghcr.io/${{ env.REPO }}:${{ github.sha }}
