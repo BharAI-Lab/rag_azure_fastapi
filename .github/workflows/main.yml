@@ -1,171 +1,81 @@
 name: Build & Deploy GDPR RAG Chat
 
-on:
-  workflow_dispatch:
-  # push:
-  #   branches: [ main ]
-
-permissions:
-  contents: read
-  packages: write
-  id-token: write
-
 env:
   AZURE_CONTAINER_APP_NAME: gdpr-rag-chat
-  AZURE_RESOURCE_GROUP: suraj-project-azure
-  REGISTRY: ghcr.io
-  # Ingress target port is already set to 8000 manually in the portal
+  AZURE_GROUP_NAME: suraj-project-azure
 
-concurrency:
-  group: deploy-${{ github.ref_name }}
-  cancel-in-progress: true
+on:
+  # push:
+  #   branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      deploy_image: ${{ steps.tag.outputs.DEPLOY_IMAGE }}
     steps:
-      - name: Checkout
+      - name: Checkout to the branch
         uses: actions/checkout@v4
-
-      - name: Lowercase repo/owner
-        run: |
-          echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
-          echo "OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Docker metadata (tags: sha-<shortsha> + latest)
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.REPO }}
-          tags: |
-            type=sha,format=short,prefix=sha-
-            type=raw,value=latest
-          labels: |
-            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
-            org.opencontainers.image.title=rag_azure_fastapi
-            org.opencontainers.image.description=RAG based chatbot with FASTAPI endpoints in Azure Container Apps Service
-
-      - name: Login to GHCR (push)
+      - name: Log in to GitHub container registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}  # built-in token for pushing from Actions
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build & push image
+      - name: Lowercase the repo name
+        run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
+      - name: Build and push container image to registry
         uses: docker/build-push-action@v6
         with:
-          context: .
-          file: ./Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      # Compute the exact image tag we'll deploy (ghcr.io/<owner>/<repo>:sha-<shortsha>)
-      - name: Compute deploy image tag
-        id: tag
-        run: |
-          set -euo pipefail
-          SHORT_SHA=${GITHUB_SHA::7}
-          DEPLOY_IMAGE="${{ env.REGISTRY }}/${REPO}:sha-${SHORT_SHA}"
-          echo "DEPLOY_IMAGE=${DEPLOY_IMAGE}" >> $GITHUB_OUTPUT
-          echo "Will deploy image: ${DEPLOY_IMAGE}"
+          tags: ghcr.io/${{ env.REPO }}:${{ github.sha }}
+          file: ./Dockerfile
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - name: Azure Login (service principal JSON)
+      - name: Azure Login
         uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Lowercase repo/owner
-        run: |
-          echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
-          echo "OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
+      - name: Lowercase the repo name
+        run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
-      # Configure GHCR credentials for PRIVATE images using your Classic PAT.
-      # Username must be the PAT owner (SurajBhar), not the org name.
-      - name: Configure GHCR registry (private GHCR)
-        shell: bash
-        env:
-          PAT_VALUE: ${{ secrets.PAT }}       # Classic PAT with at least read:packages (SSO authorized for org)
-          GHCR_USERNAME: SurajBhar
-        run: |
-          set -euo pipefail
-          az config set extension.use_dynamic_install=yes_without_prompt
-          az extension add -n containerapp --upgrade -y || true
+      - name: Deploy to Azure Container Apps
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az config set extension.use_dynamic_install=yes_without_prompt
+            az containerapp registry set \
+              -n ${{ env.AZURE_CONTAINER_APP_NAME }} \
+              -g ${{ env.AZURE_GROUP_NAME }} \
+              --server ghcr.io \
+              --username SurajBhar \
+              --password ${{ secrets.PAT }}
 
-          if [[ -z "${PAT_VALUE:-}" ]]; then
-            echo "PAT secret is missing → Azure cannot pull private GHCR images." >&2
-            exit 1
-          fi
+            az containerapp update \
+              -n ${{ env.AZURE_CONTAINER_APP_NAME }} \
+              -g ${{ env.AZURE_GROUP_NAME }} \
+              --cpu 2 --memory 4Gi \
+              --set-env-vars \
+                AZURE_OPENAI_ENDPOINT='${{ vars.AZURE_OPENAI_ENDPOINT }}' \
+                AZURE_OPENAI_KEY='${{ secrets.AZURE_OPENAI_KEY }}' \
+                AZURE_OPENAI_API_VERSION='${{ vars.AZURE_OPENAI_API_VERSION }}' \
+                AZURE_OPENAI_CHAT_DEPLOYMENT='${{ vars.AZURE_OPENAI_CHAT_DEPLOYMENT }}' \
+                AZURE_OPENAI_EMBEDDING_DEPLOYMENT='${{ vars.AZURE_OPENAI_EMBEDDING_DEPLOYMENT }}' \
+                AZURE_SEARCH_ENDPOINT='${{ vars.AZURE_SEARCH_ENDPOINT }}' \
+                AZURE_SEARCH_API_KEY='${{ secrets.AZURE_SEARCH_API_KEY }}' \
+                AZURE_SEARCH_INDEX_NAME='${{ vars.AZURE_SEARCH_INDEX_NAME }}' \
+                TOP_K='4' TEMPERATURE='0.2' MAX_TOKENS='800'
 
-          echo "Configuring private GHCR credentials on Container App as ${GHCR_USERNAME}..."
-          az containerapp registry set \
-            --name "${AZURE_CONTAINER_APP_NAME}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --server ghcr.io \
-            --username "${GHCR_USERNAME}" \
-            --password "${PAT_VALUE}"
-
-      # Update image + env vars + resources (2 vCPU / 4 GiB per replica)
-      - name: Update image, env, and resources (2 CPU / 4GiB)
-        shell: bash
-        env:
-          DEPLOY_IMAGE: ${{ needs.build.outputs.deploy_image }}
-        run: |
-          set -euo pipefail
-          echo "Deploying image: ${DEPLOY_IMAGE}"
-          az config set extension.use_dynamic_install=yes_without_prompt
-          az extension add -n containerapp --upgrade -y || true
-
-          az containerapp update \
-            --name "${AZURE_CONTAINER_APP_NAME}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --image "${DEPLOY_IMAGE}" \
-            --cpu 2 --memory 4Gi \
-            --set-env-vars \
-              AZURE_OPENAI_ENDPOINT='${{ vars.AZURE_OPENAI_ENDPOINT }}' \
-              AZURE_OPENAI_KEY='${{ secrets.AZURE_OPENAI_KEY }}' \
-              AZURE_OPENAI_API_VERSION='${{ vars.AZURE_OPENAI_API_VERSION }}' \
-              AZURE_OPENAI_CHAT_DEPLOYMENT='${{ vars.AZURE_OPENAI_CHAT_DEPLOYMENT }}' \
-              AZURE_OPENAI_EMBEDDING_DEPLOYMENT='${{ vars.AZURE_OPENAI_EMBEDDING_DEPLOYMENT }}' \
-              AZURE_SEARCH_ENDPOINT='${{ vars.AZURE_SEARCH_ENDPOINT }}' \
-              AZURE_SEARCH_API_KEY='${{ secrets.AZURE_SEARCH_API_KEY }}' \
-              AZURE_SEARCH_INDEX_NAME='${{ vars.AZURE_SEARCH_INDEX_NAME }}' \
-              TOP_K='4' TEMPERATURE='0.2' MAX_TOKENS='800'
-
-      - name: Scale (optional)
-        shell: bash
-        run: |
-          set -euo pipefail
-          az config set extension.use_dynamic_install=yes_without_prompt
-          az extension add -n containerapp --upgrade -y || true
-
-          az containerapp update \
-            --name "${AZURE_CONTAINER_APP_NAME}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --min-replicas 0 --max-replicas 2
-
-      - name: Dump ACA logs on failure
-        if: failure()
-        shell: bash
-        run: |
-          echo "---- ACA status ----"
-          az containerapp show -n "${AZURE_CONTAINER_APP_NAME}" -g "${AZURE_RESOURCE_GROUP}" -o yaml || true
-          echo "---- Revision details ----"
-          REV=$(az containerapp show -n "${AZURE_CONTAINER_APP_NAME}" -g "${AZURE_RESOURCE_GROUP}" --query properties.latestRevisionName -o tsv || true)
-          if [[ -n "${REV}" ]]; then
-            az containerapp revision show -n "${AZURE_CONTAINER_APP_NAME}" -g "${AZURE_RESOURCE_GROUP}" --revision "${REV}" -o yaml || true
-          fi
-          echo "---- Recent system logs ----"
-          az containerapp logs show -n "${AZURE_CONTAINER_APP_NAME}" -g "${AZURE_RESOURCE_GROUP}" --type system --tail 200 || true
+            az containerapp update \
+              -n ${{ env.AZURE_CONTAINER_APP_NAME }} \
+              -g ${{ env.AZURE_GROUP_NAME }} \
+              --image ghcr.io/${{ env.REPO }}:${{ github.sha }}
