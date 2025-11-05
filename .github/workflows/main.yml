@@ -14,7 +14,7 @@ env:
   AZURE_CONTAINER_APP_NAME: gdpr-rag-chat
   AZURE_RESOURCE_GROUP: suraj-project-azure
   REGISTRY: ghcr.io
-  # Ingress target port already set to 8000 manually in the portal
+  # Ingress target port is already set to 8000 manually in the portal
 
 concurrency:
   group: deploy-${{ github.ref_name }}
@@ -66,29 +66,20 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # Robust selector: handles ":sha-<hex>" or plain ":<hex>" and falls back to ":latest"
+      # Robust selector: handles ":sha-<hex>" or plain ":<hex>"; falls back to ":latest"
       - name: Select immutable tag for deploy
         id: img
         run: |
           set -euo pipefail
           echo "All tags: ${{ steps.meta.outputs.tags }}"
-          TAG=$(echo '${{ steps.meta.outputs.tags }}' \
-            | tr ' ' '\n' \
-            | grep -E ':(sha-)?[0-9a-f]{7,40}$' \
-            | head -n1 || true)
-
+          TAG=$(echo '${{ steps.meta.outputs.tags }}' | tr ' ' '\n' | grep -E ':(sha-)?[0-9a-f]{7,40}$' | head -n1 || true)
           if [ -z "$TAG" ]; then
-            TAG=$(echo '${{ steps.meta.outputs.tags }}' \
-              | tr ' ' '\n' \
-              | grep -E ':latest$' \
-              | head -n1 || true)
+            TAG=$(echo '${{ steps.meta.outputs.tags }}' | tr ' ' '\n' | grep -E ':latest$' | head -n1 || true)
           fi
-
           if [ -z "$TAG" ]; then
-            echo "No deployable tag found in docker/metadata-action outputs."
+            echo "No deployable tag found in docker/metadata-action outputs." >&2
             exit 1
           fi
-
           echo "TAG=$TAG" >> $GITHUB_OUTPUT
           echo "Will deploy image: $TAG"
 
@@ -117,7 +108,7 @@ jobs:
           az extension add -n containerapp --upgrade -y || true
 
           if [[ -z "${PAT_VALUE:-}" ]]; then
-            echo "PAT secret is missing → Azure cannot pull private GHCR images."
+            echo "PAT secret is missing → Azure cannot pull private GHCR images." >&2
             exit 1
           fi
 
@@ -129,7 +120,7 @@ jobs:
             --username "${OWNER}" \
             --password "${PAT_VALUE}"
 
-      # Update image + env vars + resources (2 vCPU / 4 GiB per replica)
+      # Explicitly update the actual container by name to avoid 'ImageRequired' errors
       - name: Update image, env, and resources (2 CPU / 4GiB)
         shell: bash
         run: |
@@ -138,10 +129,18 @@ jobs:
           az config set extension.use_dynamic_install=yes_without_prompt
           az extension add -n containerapp --upgrade -y || true
 
+          # Discover the container name created by the quickstart (usually 'simple-hello-world-container')
+          CNAME=$(az containerapp show \
+                    --name "${AZURE_CONTAINER_APP_NAME}" \
+                    --resource-group "${AZURE_RESOURCE_GROUP}" \
+                    --query "properties.template.containers[0].name" -o tsv)
+          echo "Target container name: ${CNAME}"
+
+          # Update the image for that specific container
           az containerapp update \
             --name "${AZURE_CONTAINER_APP_NAME}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --image "${{ steps.img.outputs.TAG }}" \
+            --set-template-containers-image "${CNAME}=${{ steps.img.outputs.TAG }}" \
             --cpu 2 --memory 4Gi \
             --set-env-vars \
               AZURE_OPENAI_ENDPOINT='${{ vars.AZURE_OPENAI_ENDPOINT }}' \
