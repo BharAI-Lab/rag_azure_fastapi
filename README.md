@@ -1,6 +1,6 @@
 # GDPR RAG Assistant
 
-![CI/CD](https://github.com/<your-username>/<your-repo>/actions/workflows/main.yml/badge.svg)
+![CI/CD](https://github.com/BharAI-Lab/rag_azure_fastapi/actions/workflows/main.yml/badge.svg)
 ![Docker](https://img.shields.io/badge/Docker-ready-blue?logo=docker)
 ![Azure](https://img.shields.io/badge/Azure%20Container%20App-deployed-blue?logo=microsoftazure)
 ![GHCR](https://img.shields.io/badge/GitHub%20Container%20Registry-active-darkgreen?logo=github)
