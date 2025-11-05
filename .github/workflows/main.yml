@@ -13,7 +13,7 @@ permissions:
 env:
   AZURE_CONTAINER_APP_NAME: gdpr-rag-chat
   AZURE_RESOURCE_GROUP: suraj-project-azure
-  CONTAINER_PORT: "8000"          # <- matches your Dockerfile
+  CONTAINER_PORT: "8000"          # should match Dockerfile (uvicorn --port 8000)
   REGISTRY: ghcr.io
 
 concurrency:
@@ -49,6 +49,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
+          # Built-in token; you do NOT create this secret
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build & push
@@ -80,21 +81,30 @@ jobs:
           echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
           echo "OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
 
-      # Configure registry if GHCR package is PRIVATE (safe to rerun)
+      # Configure GHCR registry on ACA if your GHCR package is PRIVATE.
+      # We avoid "if: ${{ secrets... }}" and check in bash instead.
       - name: Configure GHCR registry on Container App (private registry)
-        if: ${{ secrets.PAT != '' }}
         uses: azure/CLI@v1
+        env:
+          # Prefer GHCR_PAT; fall back to PAT if that's what you created
+          GHCR_PAT: ${{ secrets.GHCR_PAT || secrets.PAT }}
+          OWNER: ${{ github.repository_owner }}
         with:
           inlineScript: |
-            az containerapp registry set \
-              --name "${{ env.AZURE_CONTAINER_APP_NAME }}" \
-              --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
-              --server ghcr.io \
-              --username "${{ env.OWNER }}" \
-              --password "${{ secrets.PAT }}"
+            az config set extension.use_dynamic_install=yes_without_prompt
+            if [ -n "${GHCR_PAT}" ]; then
+              echo "Configuring private GHCR credentials on Container App..."
+              az containerapp registry set \
+                --name "${{ env.AZURE_CONTAINER_APP_NAME }}" \
+                --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+                --server ghcr.io \
+                --username "${OWNER}" \
+                --password "${GHCR_PAT}"
+            else
+              echo "GHCR_PAT not provided; assuming package is PUBLIC. Skipping registry set."
+            fi
 
-      # Switch the target port from 80 (quickstart) to 8000 for your app
-      - name: Update target port
+      - name: Update target port (switch from quickstart's 80 to 8000)
         uses: azure/CLI@v1
         with:
           inlineScript: |
@@ -103,8 +113,7 @@ jobs:
               --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
               --target-port "${{ env.CONTAINER_PORT }}"
 
-      # Update image + env + set 2 vCPU / 4GiB per replica
-      - name: Update image, env, and resources (2 CPU / 4Gi)
+      - name: Update image, env, and resources (2 CPU / 4GiB)
         uses: azure/CLI@v1
         with:
           inlineScript: |
