@@ -1,5 +1,15 @@
 # GDPR RAG Assistant
 
+![CI/CD](https://github.com/<your-username>/<your-repo>/actions/workflows/main.yml/badge.svg)
+![Docker](https://img.shields.io/badge/Docker-ready-blue?logo=docker)
+![Azure](https://img.shields.io/badge/Azure%20Container%20App-deployed-blue?logo=microsoftazure)
+![GHCR](https://img.shields.io/badge/GitHub%20Container%20Registry-active-darkgreen?logo=github)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688?logo=fastapi)
+![LangChain](https://img.shields.io/badge/LangChain-0.2+-green?logo=chainlink)
+![Azure OpenAI](https://img.shields.io/badge/Azure%20OpenAI-GPT--4o-412991?logo=openai)
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)
+![License](https://img.shields.io/badge/License-MIT-lightgrey.svg)
+
 A Retrieval-Augmented Generation (RAG) chatbot that answers questions about the **EU GDPR** using a vectorized corpus of Articles and Recitals. The system prioritizes grounded answers with citations, gracefully falls back when the dataset doesn’t contain the answer, and handles off-topic questions neutrally.
 
 * **Backend:** FastAPI + Azure OpenAI + Azure AI Search
