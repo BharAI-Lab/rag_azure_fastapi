@@ -5,8 +5,6 @@ env:
   AZURE_GROUP_NAME: suraj-project-azure
 
 on:
-  # push:
-  #   branches: [ main ]
   workflow_dispatch:
 
 permissions:
@@ -17,30 +15,42 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      image_ref: ${{ steps.meta.outputs.image_ref }}
+      image_digest: ${{ steps.push.outputs.digest }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Lowercase repo
+      - name: Lowercase repo path for GHCR
         run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Push with PAT to avoid org policy blocking GITHUB_TOKEN
+      # Use PAT OWNER username, not github.actor
       - name: Login to GHCR (push with PAT)
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
+          username: ${{ vars.GHCR_USERNAME }}   # should be 'surajbhar'
           password: ${{ secrets.PAT }}
 
       - name: Build & push image (tag by commit SHA)
+        id: push
         uses: docker/build-push-action@v6
         with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ env.REPO }}:${{ github.sha }}
-          file: ./Dockerfile
+          provenance: false
+
+      - name: Expose image ref for deploy
+        id: meta
+        run: |
+          echo "image_ref=ghcr.io/${REPO}:${GITHUB_SHA}" >> $GITHUB_OUTPUT
 
   deploy:
     runs-on: ubuntu-latest
@@ -51,25 +61,29 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Lowercase repo
+      - name: Lowercase repo path for GHCR
         run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
-      - name: Deploy to Azure Container Apps
+      - name: Deploy to Azure Container Apps (by digest)
         uses: azure/CLI@v1
         with:
           inlineScript: |
+            set -euo pipefail
             az config set extension.use_dynamic_install=yes_without_prompt
             az extension add -n containerapp --upgrade -y || true
 
-            # Bind private GHCR using the same PAT (username = PAT owner)
+            # Bind GHCR using PAT OWNER username
             az containerapp registry set \
               -n ${{ env.AZURE_CONTAINER_APP_NAME }} \
               -g ${{ env.AZURE_GROUP_NAME }} \
               --server ghcr.io \
-              --username ${{ github.actor }} \
+              --username ${{ vars.GHCR_USERNAME }} \
               --password ${{ secrets.PAT }}
 
-            # Update CPU/Mem, env vars (no quotes for numbers), and image tag we just pushed
+            IMAGE_REF="${{ needs.build.outputs.image_ref }}"
+            IMAGE_DIGEST="${{ needs.build.outputs.image_digest }}"
+            echo "Deploying ${IMAGE_REF}@${IMAGE_DIGEST}"
+
             az containerapp update \
               -n ${{ env.AZURE_CONTAINER_APP_NAME }} \
               -g ${{ env.AZURE_GROUP_NAME }} \
@@ -83,5 +97,7 @@ jobs:
                 AZURE_SEARCH_ENDPOINT=${{ vars.AZURE_SEARCH_ENDPOINT }} \
                 AZURE_SEARCH_API_KEY=${{ secrets.AZURE_SEARCH_API_KEY }} \
                 AZURE_SEARCH_INDEX_NAME=${{ vars.AZURE_SEARCH_INDEX_NAME }} \
-                TOP_K=${{ vars.TOP_K }} TEMPERATURE=${{ vars.TEMPERATURE }} MAX_TOKENS=${{ vars.MAX_TOKENS }} \
-              --image ghcr.io/${{ env.REPO }}:${{ github.sha }}
+                TOP_K=${{ vars.TOP_K }} \
+                TEMPERATURE=${{ vars.TEMPERATURE }} \
+                MAX_TOKENS=${{ vars.MAX_TOKENS }} \
+              --image "${IMAGE_REF}@${IMAGE_DIGEST}"
