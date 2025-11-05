@@ -6,25 +6,23 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /webapp
 
-# System deps
+# Install minimal system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl ca-certificates && rm -rf /var/lib/apt/lists/*
 
-# Create a non-root user (security best practice)
+# Create non-root user (safer to run apps)
 RUN useradd -m -u 10001 appuser
 
-# Install deps
+# Install Python dependencies
 COPY app/requirements.txt /webapp/requirements.txt
 RUN python -m pip install --upgrade pip && pip install -r requirements.txt
 
-# Copy code
+# Copy application code
 COPY app /webapp/app
 COPY web /webapp/web
 
-EXPOSE 8000
-
-# Drop privileges
+# Run as non-root user
 USER appuser
 
-ENTRYPOINT ["uvicorn"]
-CMD ["app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]
+# Start Uvicorn app (keep host 0.0.0.0 so container accepts external connections)
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--proxy-headers"]

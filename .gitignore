@@ -101,3 +101,5 @@ environment.txt
 necessary.txt
 requirements_old.txt
 docs/
+.env.local
+Dockerfile_old.txt
