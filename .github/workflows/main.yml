@@ -23,6 +23,8 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      deploy_image: ${{ steps.tag.outputs.DEPLOY_IMAGE }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,7 +37,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Docker metadata (SHA + latest)
+      - name: Docker metadata (tags: sha-<shortsha> + latest)
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -53,7 +55,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}  # built-in; no need to create
+          password: ${{ secrets.GITHUB_TOKEN }}  # built-in token for pushing from Actions
 
       - name: Build & push image
         uses: docker/build-push-action@v6
@@ -66,22 +68,15 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # Robust selector: handles ":sha-<hex>" or plain ":<hex>"; falls back to ":latest"
-      - name: Select immutable tag for deploy
-        id: img
+      # Compute the exact image tag we'll deploy (ghcr.io/<owner>/<repo>:sha-<shortsha>)
+      - name: Compute deploy image tag
+        id: tag
         run: |
           set -euo pipefail
-          echo "All tags: ${{ steps.meta.outputs.tags }}"
-          TAG=$(echo '${{ steps.meta.outputs.tags }}' | tr ' ' '\n' | grep -E ':(sha-)?[0-9a-f]{7,40}$' | head -n1 || true)
-          if [ -z "$TAG" ]; then
-            TAG=$(echo '${{ steps.meta.outputs.tags }}' | tr ' ' '\n' | grep -E ':latest$' | head -n1 || true)
-          fi
-          if [ -z "$TAG" ]; then
-            echo "No deployable tag found in docker/metadata-action outputs." >&2
-            exit 1
-          fi
-          echo "TAG=$TAG" >> $GITHUB_OUTPUT
-          echo "Will deploy image: $TAG"
+          SHORT_SHA=${GITHUB_SHA::7}
+          DEPLOY_IMAGE="${{ env.REGISTRY }}/${REPO}:sha-${SHORT_SHA}"
+          echo "DEPLOY_IMAGE=${DEPLOY_IMAGE}" >> $GITHUB_OUTPUT
+          echo "Will deploy image: ${DEPLOY_IMAGE}"
 
   deploy:
     runs-on: ubuntu-latest
@@ -97,11 +92,13 @@ jobs:
           echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
           echo "OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
 
-      # Configure GHCR credentials for PRIVATE images (uses your single PAT secret)
+      # Configure GHCR credentials for PRIVATE images using your Classic PAT.
+      # Username must be the PAT owner (SurajBhar), not the org name.
       - name: Configure GHCR registry (private GHCR)
         shell: bash
         env:
-          PAT_VALUE: ${{ secrets.PAT }}       # PAT with at least read:packages
+          PAT_VALUE: ${{ secrets.PAT }}       # Classic PAT with at least read:packages (SSO authorized for org)
+          GHCR_USERNAME: SurajBhar
         run: |
           set -euo pipefail
           az config set extension.use_dynamic_install=yes_without_prompt
@@ -112,35 +109,29 @@ jobs:
             exit 1
           fi
 
-          echo "Configuring private GHCR credentials on Container App..."
+          echo "Configuring private GHCR credentials on Container App as ${GHCR_USERNAME}..."
           az containerapp registry set \
             --name "${AZURE_CONTAINER_APP_NAME}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
             --server ghcr.io \
-            --username "${OWNER}" \
+            --username "${GHCR_USERNAME}" \
             --password "${PAT_VALUE}"
 
-      # Explicitly update the actual container by name to avoid 'ImageRequired' errors
+      # Update image + env vars + resources (2 vCPU / 4 GiB per replica)
       - name: Update image, env, and resources (2 CPU / 4GiB)
         shell: bash
+        env:
+          DEPLOY_IMAGE: ${{ needs.build.outputs.deploy_image }}
         run: |
           set -euo pipefail
-          echo "Deploying image: ${{ steps.img.outputs.TAG }}"
+          echo "Deploying image: ${DEPLOY_IMAGE}"
           az config set extension.use_dynamic_install=yes_without_prompt
           az extension add -n containerapp --upgrade -y || true
 
-          # Discover the container name created by the quickstart (usually 'simple-hello-world-container')
-          CNAME=$(az containerapp show \
-                    --name "${AZURE_CONTAINER_APP_NAME}" \
-                    --resource-group "${AZURE_RESOURCE_GROUP}" \
-                    --query "properties.template.containers[0].name" -o tsv)
-          echo "Target container name: ${CNAME}"
-
-          # Update the image for that specific container
           az containerapp update \
             --name "${AZURE_CONTAINER_APP_NAME}" \
             --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --set-template-containers-image "${CNAME}=${{ steps.img.outputs.TAG }}" \
+            --image "${DEPLOY_IMAGE}" \
             --cpu 2 --memory 4Gi \
             --set-env-vars \
               AZURE_OPENAI_ENDPOINT='${{ vars.AZURE_OPENAI_ENDPOINT }}' \
