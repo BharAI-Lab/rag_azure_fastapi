@@ -13,7 +13,7 @@ permissions:
 env:
   AZURE_CONTAINER_APP_NAME: gdpr-rag-chat
   AZURE_RESOURCE_GROUP: suraj-project-azure
-  CONTAINER_PORT: "8000"          # should match Dockerfile (uvicorn --port 8000)
+  CONTAINER_PORT: "8000"     # matches Dockerfile (uvicorn --port 8000)
   REGISTRY: ghcr.io
 
 concurrency:
@@ -24,14 +24,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Lowercase repo/owner
         run: |
           echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
           echo "OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
 
-      - uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Docker metadata (SHA + latest)
         id: meta
@@ -43,8 +45,10 @@ jobs:
             type=raw,value=latest
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.title=rag_azure_fastapi
+            org.opencontainers.image.description=RAG based chatbot with FASTAPI endpoints in Azure Container Apps Service
 
-      - name: Login to GHCR (push)
+      - name: Log in to GHCR (push)
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -52,7 +56,7 @@ jobs:
           # Built-in token; you do NOT create this secret
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build & push
+      - name: Build & push image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -72,7 +76,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: azure/login@v2
+      - name: Azure Login (Service Principal JSON)
+        uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
@@ -81,43 +86,60 @@ jobs:
           echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
           echo "OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
 
-      # Configure GHCR registry on ACA if your GHCR package is PRIVATE.
-      # We avoid "if: ${{ secrets... }}" and check in bash instead.
+      # Configure private GHCR credentials on the Container App (safe to re-run).
+      # We avoid "if: secrets" checks. Pick GHCR_PAT or fallback PAT in bash.
       - name: Configure GHCR registry on Container App (private registry)
         uses: azure/CLI@v1
         env:
-          # Prefer GHCR_PAT; fall back to PAT if that's what you created
-          GHCR_PAT: ${{ secrets.GHCR_PAT || secrets.PAT }}
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          ALT_PAT: ${{ secrets.PAT }}
           OWNER: ${{ github.repository_owner }}
         with:
           inlineScript: |
+            set -e
             az config set extension.use_dynamic_install=yes_without_prompt
-            if [ -n "${GHCR_PAT}" ]; then
-              echo "Configuring private GHCR credentials on Container App..."
+            az extension add -n containerapp --upgrade -y
+            PAT_VALUE="${GHCR_PAT:-$ALT_PAT}"
+            if [ -n "${PAT_VALUE}" ]; then
+              echo "Configuring private GHCR credentials for ${OWNER}..."
               az containerapp registry set \
                 --name "${{ env.AZURE_CONTAINER_APP_NAME }}" \
                 --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
                 --server ghcr.io \
                 --username "${OWNER}" \
-                --password "${GHCR_PAT}"
+                --password "${PAT_VALUE}"
             else
-              echo "GHCR_PAT not provided; assuming package is PUBLIC. Skipping registry set."
+              echo "No GHCR PAT provided; assuming package is PUBLIC. Skipping registry set."
             fi
 
-      - name: Update target port (switch from quickstart's 80 to 8000)
+      # Switch ingress target port from quickstart's 80 to our app's 8000
+      - name: Update ingress target port
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az containerapp update \
+            set -e
+            az config set extension.use_dynamic_install=yes_without_prompt
+            az extension add -n containerapp --upgrade -y
+            az containerapp ingress set \
               --name "${{ env.AZURE_CONTAINER_APP_NAME }}" \
               --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
-              --target-port "${{ env.CONTAINER_PORT }}"
+              --type external \
+              --target-port "${{ env.CONTAINER_PORT }}" \
+              --transport auto
+            # Uncomment to enforce HTTPS-only:
+            # az containerapp ingress tls set \
+            #   --name "${{ env.AZURE_CONTAINER_APP_NAME }}" \
+            #   --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+            #   --tls-redirect-enabled true
 
+      # Update image + env vars + resources (2 vCPU / 4GiB per replica)
       - name: Update image, env, and resources (2 CPU / 4GiB)
         uses: azure/CLI@v1
         with:
           inlineScript: |
+            set -e
             az config set extension.use_dynamic_install=yes_without_prompt
+            az extension add -n containerapp --upgrade -y
             az containerapp update \
               --name "${{ env.AZURE_CONTAINER_APP_NAME }}" \
               --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
@@ -134,15 +156,20 @@ jobs:
                 AZURE_SEARCH_INDEX_NAME='${{ vars.AZURE_SEARCH_INDEX_NAME }}' \
                 TOP_K='4' TEMPERATURE='0.2' MAX_TOKENS='800'
 
+      # Optional autoscale bounds (kept simple)
       - name: Scale (optional)
         uses: azure/CLI@v1
         with:
           inlineScript: |
+            set -e
+            az config set extension.use_dynamic_install=yes_without_prompt
+            az extension add -n containerapp --upgrade -y
             az containerapp update \
               --name "${{ env.AZURE_CONTAINER_APP_NAME }}" \
               --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
               --min-replicas 0 --max-replicas 2
 
+      # Diagnostics on failure
       - name: Dump ACA logs on failure
         if: failure()
         uses: azure/CLI@v1
@@ -150,6 +177,8 @@ jobs:
           inlineScript: |
             echo "---- ACA status ----"
             az containerapp show -n "${{ env.AZURE_CONTAINER_APP_NAME }}" -g "${{ env.AZURE_RESOURCE_GROUP }}" -o yaml || true
+            echo "---- Revision details ----"
             REV=$(az containerapp show -n "${{ env.AZURE_CONTAINER_APP_NAME }}" -g "${{ env.AZURE_RESOURCE_GROUP }}" --query properties.latestRevisionName -o tsv || true)
             [ -n "$REV" ] && az containerapp revision show -n "${{ env.AZURE_CONTAINER_APP_NAME }}" -g "${{ env.AZURE_RESOURCE_GROUP }}" --revision "$REV" -o yaml || true
+            echo "---- Recent system logs ----"
             az containerapp logs show -n "${{ env.AZURE_CONTAINER_APP_NAME }}" -g "${{ env.AZURE_RESOURCE_GROUP }}" --type system --tail 200 || true
