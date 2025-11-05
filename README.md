@@ -1,9 +1,93 @@
-# Retrieval Augmented Generation (RAG) with Azure
+# GDPR RAG Assistant
 
-A Retrieval Augmented Generation example with Azure, using Azure OpenAI Service, Azure Cognitive Search, embeddings, and a sample CSV file to produce
-a powerful grounding to applications that want to deliver customized generative AI applications.
+A Retrieval-Augmented Generation (RAG) chatbot that answers questions about the **EU GDPR** using a vectorized corpus of Articles and Recitals. The system prioritizes grounded answers with citations, gracefully falls back when the dataset doesn’t contain the answer, and handles off-topic questions neutrally.
 
-## Install the prerequisites
+* **Backend:** FastAPI + Azure OpenAI + Azure AI Search
+* **RAG Core:** Three-tier logic (Grounded → Hybrid → Off-topic)
+* **Frontend:** Lightweight SPA (HTML/CSS/JS) with citations and a 3D retrieval viz
+* **Deploy:** Docker + (optionally) Azure Container Apps
+
+---
+
+## Table of Contents
+
+* [Demo](#demo)
+* [Architecture](#architecture)
+* [Dataset](#dataset)
+* [Getting Started](#getting-started)
+* [Configuration](#configuration)
+* [Run Locally](#run-locally)
+* [API Reference](#api-reference)
+* [Frontend](#frontend)
+* [Deployment (Azure Container Apps)](#deployment-azure-container-apps)
+* [Evaluation & Testing](#evaluation--testing)
+* [Troubleshooting](#troubleshooting)
+* [Roadmap](#roadmap)
+* [Citation](#citation)
+* [License](#license)
+
+---
+
+## Demo
+
+**Capabilities**
+
+* Grounded answers with citations (when the dataset has coverage)
+* Explicit fallback when no direct answer is found; concise expert guidance
+* Off-topic handling without misleading citations
+* Optional 3D visualization of retrieved chunks for the last turn (Plotly) 
+
+---
+
+## Architecture
+
+### Three-tier logic (as implemented)
+
+* **Grounded Answer (GDPR Dataset)** — Only uses retrieved context; if the answer isn’t explicitly present, outputs a sentinel string signaling “no answer from dataset”.
+* **Hybrid GDPR Guidance** — When the dataset yields no direct answer (or match is weak), clearly says so, then provides a concise expert explanation.
+* **Off-topic Neutral Answer** — For non-GDPR questions, provides a short, factual reply and **no** dataset sources.
+
+> Entrypoints:
+>
+> * Backend: `app/main.py` → `/api/chat` calls `rag_answer()`
+> * RAG: `app/rag.py` (classification → retrieval → branch → answer)
+
+---
+
+## Dataset
+
+We use the **GDPR Articles & Recitals** dataset (Hugging Face: `AndreaSimeri/GDPR`), which includes:
+
+* **99 Articles** across 11 chapters
+* **173 Recitals** providing interpretive guidance
+
+Key example: Article **7(2)** (Conditions for consent) is informed by Recital **42**, clarifying proof of consent and informed identity/purpose.
+
+The frontend’s **Dataset** panel links to the dataset and includes the paper reference; it’s wired in `web/app.js` and rendered by `web/index.html`.
+
+**Reference:**
+Simeri, A. and Tagarelli, A. (2023). *GDPR Article Retrieval based on Domain-adaptive and Task-adaptive Legal Pre-trained Language Models*. LIRAI 2023 (CEUR Vol. 3594), pp. 63–76.
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+* Python 3.10+
+* Azure subscription with:
+
+  * **Azure OpenAI** (deployed Chat + Embedding models)
+  * **Azure AI Search** (index preloaded with GDPR chunks)
+
+### Install dependencies
+
+> Dependency highlights:
+>
+> * OpenAI/Azure OpenAI SDKs + LangChain providers
+> * Azure AI Search SDK
+> * FastAPI + Uvicorn
+>   See `requirements.txt`. 
 
 ### Method 1: Replicate the Virtual Enviroment
 Use the `requirements.txt` to install all dependencies
@@ -19,8 +103,8 @@ python -m venv .venv
 git clone https://github.com/BharAI-Lab/rag_azure_fastapi.git
 # Move into the directory (Locally)
 cd rag_azure_fastapi
-# Create a python environment using python3.13
-python3.13 -m venv venv
+# Create a python environment using python3.11
+python3.11 -m venv venv
 # Activate the virtual environment
 source venv/bin/activate
 # Install the dependencies
@@ -38,26 +122,195 @@ conda activate rag_azure_fastapi
 # Install all dependencies using requirements.txt file
 pip install -r requirements.txt
 ```
-### Add your keys
 
-Find the Azure OpenAI Keys in the Azure OpenAI Service. Note, that keys aren't in the studio, but in the resource itself. Add them to a local `.env` file. This repository ignores the `.env` file to prevent you (and me) from adding these keys by mistake.
+---
 
-Your `.env` file should look like this:
+## Configuration
+
+All runtime configuration is centralized in `app/settings.py` and read from environment variables at startup.
+
+**Required environment variables**
 
 ```
-# Azure OpenAI
-OPENAI_API_TYPE="azure"
-OPENAI_API_BASE="https://demo-alfredo-openai.openai.azure.com/"
-OPENAI_API_KEY="0asd8924yl87asljhsd823lkjahsdf234"
-OPENAI_API_VERSION="2023-07-01-preview"
-
-# Azure Cognitive Search
-SEARCH_SERVICE_NAME="https://demo-alfredo.search.windows.net"
-SEARCH_API_KEY="zlkjhasd876lkjh234978sg098srtiuy"
-SEARCH_INDEX_NAME="demo-index"
+AZURE_OPENAI_ENDPOINT=
+AZURE_OPENAI_KEY=
+AZURE_OPENAI_API_VERSION=
+AZURE_OPENAI_CHAT_DEPLOYMENT=
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT=
+AZURE_SEARCH_ENDPOINT=
+AZURE_SEARCH_API_KEY=
+AZURE_SEARCH_INDEX_NAME=
 ```
 
-Note that the Azure Cognitive Search is only needed if you are following the Retrieval Augmented Guidance (RAG) demo. It isn't required for a simple Chat application.
+**Optional tuning knobs**
+
+```
+TOP_K=4
+TEMPERATURE=0.2
+MAX_TOKENS=800
+```
+
+For local dev, create a `.env` file in the repo root; `python-dotenv` loads it automatically. In Azure, set these as container **Environment Variables / Secrets**.
+
+---
+
+## Run Locally
+
+1. **Start the API**
+
+```bash
+uvicorn app.main:app --reload --port 8000
+```
+
+2. **Open the UI**
+   Visit: `http://127.0.0.1:8000` → the SPA is served from `web/index.html` via `/static`. 
+
+---
+
+## API Reference
+
+### POST `/api/chat`
+
+**Request**
+
+```json
+{
+  "message": "Within how many hours must a controller notify a data breach?"
+}
+```
+
+**Response**
+
+```json
+{
+  "answer": "The controller must notify ... not later than 72 hours ... (Article 33).",
+  "sources": [
+    {
+      "article_id": "33",
+      "article_title": "Notification of a personal data breach to the supervisory authority",
+      "chunk_id": 12,
+      "snippet": "…",
+      "score": 0.78
+    }
+  ]
+}
+```
+
+**Models (Pydantic)**
+
+* `ChatRequest { message: str }`
+* `Source { article_id: str, article_title: str, chunk_id: int, snippet: str, score: float }`
+* `ChatResponse { answer: str, sources: Source[] }`
+
+Defined in `app/schemas.py`.
+
+---
+
+## Frontend
+
+A minimalist, dependency-free SPA (HTML + CSS + vanilla JS).
+
+* **Chat UI**: sends `POST /api/chat` and renders markdown + citations (`web/app.js` → `send()`, `appendBot()`), with copy-to-clipboard and a “Jump to latest” helper. 
+* **Panels**: **About**, **Dataset**, and **3D Viz** slide-in via a reusable side panel. Content is pre-baked in `app.js`; styles in `styles.css`.
+* **Theme**: dark/light toggle persists in `localStorage` (`data-theme` attribute). 
+* **3D Viz**: plots the last turn’s retrieved chunks on a unit sphere using approximate `acos(similarity)` for angles, with Plotly loaded by CDN in `index.html`.
+
+**Key files**
+
+* `web/index.html` — shell & asset loading 
+* `web/styles.css` — look & feel (responsive, dark default) 
+* `web/app.js` — chat logic, panels, 3D viz (Plotly) 
+
+---
+
+## Deployment (Azure Container Apps)
+
+> Below assumes you have a working **Dockerfile** and the required env vars set as **secrets** in Azure.
+
+### Build & run (local)
+
+```bash
+docker build -t gdpr-rag:latest .
+docker run --rm -p 8000:8000 \
+  --env-file .env \
+  gdpr-rag:latest
+```
+
+### Push to registry (example: GitHub Container Registry)
+
+```bash
+docker tag gdpr-rag:latest ghcr.io/<org-or-user>/gdpr-rag:latest
+docker push ghcr.io/<org-or-user>/gdpr-rag:latest
+```
+
+### Create Azure Container App (high level)
+
+```bash
+# login and select subscription first (az login / az account set)
+az containerapp env create -g <rg> -n <env-name> --location <region>
+
+az containerapp create -g <rg> -n gdpr-rag \
+  --image ghcr.io/<org-or-user>/gdpr-rag:latest \
+  --environment <env-name> \
+  --target-port 8000 --ingress external \
+  --env-vars \
+    AZURE_OPENAI_ENDPOINT=... \
+    AZURE_OPENAI_KEY=secretref:AZURE_OPENAI_KEY \
+    AZURE_OPENAI_API_VERSION=... \
+    AZURE_OPENAI_CHAT_DEPLOYMENT=... \
+    AZURE_OPENAI_EMBEDDING_DEPLOYMENT=... \
+    AZURE_SEARCH_ENDPOINT=... \
+    AZURE_SEARCH_API_KEY=secretref:AZURE_SEARCH_API_KEY \
+    AZURE_SEARCH_INDEX_NAME=...
+```
+
+---
+
+## Evaluation & Testing
+
+### What to measure
+
+* **Retrieval**: Recall@K, MRR, top-1 score distribution
+* **Answering**:
+
+  * **Groundedness** (does the answer cite retrieved spans?)
+  * **Exact Match / F1** vs. gold answers for a small curated set (30–50 Q/A)
+* **Routing metrics**:
+
+  * Rate of **Grounded** vs **Hybrid** vs **Off-topic**
+  * **Hybrid triggers** due to sentinel vs. due to weak scores
+
+### Quick checks
+
+* Build a `/api/debug/retrieve?q=...` (optional) to inspect top-K results and scores during tuning.
+* Log `{ intent, top1_score, used_branch }` per request for offline analysis.
+
+---
+
+## Troubleshooting
+
+* **No answer despite known coverage**
+  Check the **top-1 score** coming back from Azure Search and the **threshold** (`RAG_STRONG_SCORE`, default behavior in code). Consider increasing `TOP_K`.
+
+* **Empty sources or “No direct answer found…” often**
+  Verify the **index schema**, **embedding model name**, and that embeddings were generated for both **documents** and (implicitly) the **query** at retrieval time.
+
+* **CORS errors in browser**
+  The API enables permissive CORS for demo. If you changed it, ensure your frontend origin is allowed.
+
+* **Auth/Key errors**
+  Confirm all env vars match the **deployment names** in Azure OpenAI and **keys**/endpoint for Azure AI Search.
+
+---
+
+## Roadmap
+
+* Add `/healthz` (readiness/liveness) and `/metrics` (Prometheus) endpoints
+* Inline citations (e.g., auto-append `[Article X]` tags) in grounded answers
+* Hybrid retrieval (lexical + vector) for Azure AI Search
+* Evaluation scripts (`/scripts/eval.py`) with a small gold Q/A set
+
+---
 
 ## Generate a PAT
 
@@ -100,6 +353,16 @@ az containerapp logs  show  --name $CONTAINER_APP_NAME --resource-group $RESOURC
 
 Update both variables to match your environment
 
+
+
+### Accept request types sparingly
+
+| GET | POST | PUT | HEAD|
+|---|---|---|---|
+| Read Only | Write Only | Update existing | Does it exist? |
+
+---
+
 ## API Best Practices
 
 Although there are a few best practices for using the FastAPI framework, there are many different other suggestions to build solid HTTP APIs that can be applicable anywhere. 
@@ -116,8 +379,30 @@ Here are some common scenarios associated with HTTP error codes:
 Note that it is a good practice to use `404 Not Found` to protect from requests that try to find if a resource exists without being authenticated. A good example of this is a service that doesn't want to expose usernames unless you are authenticated.
 
 
-### Accept request types sparingly
+---
 
-| GET | POST | PUT | HEAD|
-|---|---|---|---|
-| Read Only | Write Only | Update existing | Does it exist? |
+## Citation
+
+If you use the dataset or reference its methodology, please cite:
+
+```
+@inproceedings{SimeriGDPRLirai2023,
+  author       = {Andrea Simeri and Andrea Tagarelli},
+  title        = {GDPR Article Retrieval based on Domain-adaptive and Task-adaptive Legal Pre-trained Language Models},
+  booktitle    = {Proceedings of the 1st LIRAI 2023 @ HT 2023},
+  series       = {CEUR Workshop Proceedings},
+  volume       = {3594},
+  pages        = {63-76},
+  year         = {2023},
+  url          = {https://ceur-ws.org/Vol-3594/paper5.pdf}
+}
+```
+
+---
+
+## License
+
+This repository is for research and demonstration purposes.
+Check dataset license terms on Hugging Face before redistribution.
+
+---

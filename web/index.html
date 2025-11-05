@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>GDPR RAG Assistant</title>
+  <link rel="stylesheet" href="/static/styles.css"/>
+  <!-- Plotly for optional 3D viz -->
+  <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">🔐</div>
+      <div class="titles">
+        <h1>GDPR RAG Assistant</h1>
+        <p>Answers grounded in your GDPR Vector Database</p>
+      </div>
+    </div>
+    <div class="controls">
+      <button id="about-btn" class="btn link" title="About this chatbot">About</button>
+      <button id="dataset-btn" class="btn link" title="About the dataset">Dataset</button>
+      <button id="viz3d-btn" class="btn link" title="3D visualisation">3D Viz</button>
+      <button id="theme-toggle" class="btn link" title="Toggle light/dark">Theme</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="chat-window" class="chat-window" aria-live="polite"></div>
+    <button id="jump-latest" class="jump btn ghost" title="Jump to latest">↓ New messages</button>
+  </main>
+
+  <form id="chat-form" class="composer" autocomplete="off">
+    <label class="sr-only" for="user-input">Ask a GDPR question</label>
+    <textarea id="user-input" class="ask"
+      placeholder="Message GDPR RAG Assistant… (Enter to send, Shift+Enter for newline)"
+      rows="1" aria-label="Ask a GDPR question"></textarea>
+    <div class="actions">
+      <button class="btn primary" type="submit" id="send-btn" title="Send (Enter)">Send</button>
+      <button class="btn ghost" type="button" id="clear-btn" title="Clear chat">Clear</button>
+    </div>
+  </form>
+
+  <footer class="footnote">Demo • No streaming • Azure Container Apps</footer>
+
+  <!-- Slide-in panel (reused for About / Dataset / 3D) -->
+  <aside id="sidepanel" class="panel" aria-hidden="true">
+    <div class="panel-header">
+      <h2 id="panel-title">Panel</h2>
+      <button id="panel-close" class="btn link" title="Close">✕</button>
+    </div>
+    <div id="panel-content" class="panel-content"></div>
+  </aside>
+  <div id="panel-backdrop" class="backdrop" hidden></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

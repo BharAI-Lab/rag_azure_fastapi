@@ -91,3 +91,13 @@ docs/_build/
 
 # Others
 pip-selfcheck.json
+
+
+# New files
+ignored
+ignored/
+Dockerfile_old
+environment.txt
+necessary.txt
+requirements_old.txt
+docs/

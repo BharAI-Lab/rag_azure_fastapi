@@ -1,66 +1,146 @@
-name: Trigger auto deployment for demo-container
+name: Build & Deploy GDPR RAG Chat
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: [ main ]
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
 
 env:
-  AZURE_CONTAINER_APP_NAME: demo-container
-  AZURE_GROUP_NAME: demo-container
+  AZURE_CONTAINER_APP_NAME: gdpr-rag-chat
+  AZURE_RESOURCE_GROUP: suraj-project-azure
+  CONTAINER_PORT: "8000"          # <- matches your Dockerfile
+  REGISTRY: ghcr.io
 
-# When this action will be executed
-on:
-  # Automatically trigger it when detected changes in repo. Remove comments to enable
-  #push:
-  #  branches:
-  #    [ main ]
-
-  # Allow mannually trigger
-  workflow_dispatch:
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout to the branch
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+      - name: Lowercase repo/owner
+        run: |
+          echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+          echo "OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
 
-      - name: Log in to GitHub container registry
-        uses: docker/login-action@v1.10.0
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Docker metadata (SHA + latest)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.REPO }}
+          tags: |
+            type=sha,format=short
+            type=raw,value=latest
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+
+      - name: Login to GHCR (push)
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Lowercase the repo name and username
-        run: echo "REPO=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
-
-      - name: Build and push container image to registry
-        uses: docker/build-push-action@v2
+      - name: Build & push
+        uses: docker/build-push-action@v6
         with:
-          push: true
-          tags: ghcr.io/${{ env.REPO }}:${{ github.sha }}
+          context: .
           file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Select immutable tag for deploy
+        id: img
+        run: |
+          echo "TAG=$(echo '${{ steps.meta.outputs.tags }}' | tr ' ' '\n' | grep -E ':[0-9a-f]{7,40}$' | head -n1)" >> $GITHUB_OUTPUT
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
-
     steps:
-      - name: Azure Login
-        uses: azure/login@v1
+      - uses: azure/login@v2
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Lowercase the repo name and username
-        run: echo "REPO=${GITHUB_REPOSITORY,,}" >>${GITHUB_ENV}
+      - name: Lowercase repo/owner
+        run: |
+          echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+          echo "OWNER=${GITHUB_REPOSITORY_OWNER,,}" >> $GITHUB_ENV
 
-      - name: Deploy to containerapp
+      # Configure registry if GHCR package is PRIVATE (safe to rerun)
+      - name: Configure GHCR registry on Container App (private registry)
+        if: ${{ secrets.PAT != '' }}
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az containerapp registry set \
+              --name "${{ env.AZURE_CONTAINER_APP_NAME }}" \
+              --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+              --server ghcr.io \
+              --username "${{ env.OWNER }}" \
+              --password "${{ secrets.PAT }}"
+
+      # Switch the target port from 80 (quickstart) to 8000 for your app
+      - name: Update target port
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az containerapp update \
+              --name "${{ env.AZURE_CONTAINER_APP_NAME }}" \
+              --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+              --target-port "${{ env.CONTAINER_PORT }}"
+
+      # Update image + env + set 2 vCPU / 4GiB per replica
+      - name: Update image, env, and resources (2 CPU / 4Gi)
         uses: azure/CLI@v1
         with:
           inlineScript: |
             az config set extension.use_dynamic_install=yes_without_prompt
-            az containerapp registry set -n ${{ env.AZURE_CONTAINER_APP_NAME }} -g ${{ env.AZURE_GROUP_NAME }} --server ghcr.io --username  ${{ github.actor }} --password ${{ secrets.PAT }}
-            az containerapp update -n ${{ env.AZURE_CONTAINER_APP_NAME }} -g ${{ env.AZURE_GROUP_NAME }} --set-env-vars OPENAI_API_TYPE=azure OPENAI_API_BASE=https://demo-alfredo-openai.openai.azure.com/ OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} OPENAI_API_VERSION="2023-07-01-preview" SEARCH_SERVICE_NAME="https://demo-alfredo.search.windows.net" SEARCH_API_KEY=${{ secrets.SEARCH_SERVICE_API_KEY }} SEARCH_INDEX_NAME="demo-alfredo"
-            az containerapp update -n demo-container -g demo-container --cpu 2 --memory 4Gi
-            az containerapp update -n ${{ env.AZURE_CONTAINER_APP_NAME }} -g ${{ env.AZURE_GROUP_NAME }} --image ghcr.io/${{ env.REPO }}:${{ github.sha }}
+            az containerapp update \
+              --name "${{ env.AZURE_CONTAINER_APP_NAME }}" \
+              --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+              --image "${{ steps.img.outputs.TAG }}" \
+              --cpu 2 --memory 4Gi \
+              --set-env-vars \
+                AZURE_OPENAI_ENDPOINT='${{ vars.AZURE_OPENAI_ENDPOINT }}' \
+                AZURE_OPENAI_KEY='${{ secrets.AZURE_OPENAI_KEY }}' \
+                AZURE_OPENAI_API_VERSION='${{ vars.AZURE_OPENAI_API_VERSION }}' \
+                AZURE_OPENAI_CHAT_DEPLOYMENT='${{ vars.AZURE_OPENAI_CHAT_DEPLOYMENT }}' \
+                AZURE_OPENAI_EMBEDDING_DEPLOYMENT='${{ vars.AZURE_OPENAI_EMBEDDING_DEPLOYMENT }}' \
+                AZURE_SEARCH_ENDPOINT='${{ vars.AZURE_SEARCH_ENDPOINT }}' \
+                AZURE_SEARCH_API_KEY='${{ secrets.AZURE_SEARCH_API_KEY }}' \
+                AZURE_SEARCH_INDEX_NAME='${{ vars.AZURE_SEARCH_INDEX_NAME }}' \
+                TOP_K='4' TEMPERATURE='0.2' MAX_TOKENS='800'
+
+      - name: Scale (optional)
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az containerapp update \
+              --name "${{ env.AZURE_CONTAINER_APP_NAME }}" \
+              --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+              --min-replicas 0 --max-replicas 2
+
+      - name: Dump ACA logs on failure
+        if: failure()
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            echo "---- ACA status ----"
+            az containerapp show -n "${{ env.AZURE_CONTAINER_APP_NAME }}" -g "${{ env.AZURE_RESOURCE_GROUP }}" -o yaml || true
+            REV=$(az containerapp show -n "${{ env.AZURE_CONTAINER_APP_NAME }}" -g "${{ env.AZURE_RESOURCE_GROUP }}" --query properties.latestRevisionName -o tsv || true)
+            [ -n "$REV" ] && az containerapp revision show -n "${{ env.AZURE_CONTAINER_APP_NAME }}" -g "${{ env.AZURE_RESOURCE_GROUP }}" --revision "$REV" -o yaml || true
+            az containerapp logs show -n "${{ env.AZURE_CONTAINER_APP_NAME }}" -g "${{ env.AZURE_RESOURCE_GROUP }}" --type system --tail 200 || true

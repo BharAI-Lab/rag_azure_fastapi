@@ -1,0 +1,21 @@
+# Core Azure + OpenAI
+openai>=1.52.0
+tiktoken>=0.7.0
+
+# LangChain (provider split)
+langchain>=0.2.14
+langchain-openai>=0.2.3
+langchain-community>=0.2.12
+langchain-azure-ai>=0.1.0
+langchain-text-splitters>=0.2.1
+
+# Azure AI Search SDK
+azure-search-documents>=11.6.0
+azure-identity>=1.18.0
+
+# API & utils
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+python-dotenv>=1.0.1
+pydantic>=2.7.0
+pandas>=2.2.0
