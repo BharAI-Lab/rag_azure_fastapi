@@ -25,15 +25,19 @@ jobs:
       - name: Lowercase repo path for GHCR
         run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
+      - name: Validate GHCR secrets exist
+        run: |
+          : "${{ secrets.GHCR_USERNAME?Need GHCR_USERNAME secret }}"
+          : "${{ secrets.PAT?Need PAT secret }}"
+
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
 
-      # Use PAT OWNER username, not github.actor
       - name: Login to GHCR (push with PAT)
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ vars.GHCR_USERNAME }}   # should be 'surajbhar'
+          username: ${{ secrets.GHCR_USERNAME }}   # <-- from secrets, not vars
           password: ${{ secrets.PAT }}
 
       - name: Build & push image (tag by commit SHA)
@@ -64,6 +68,11 @@ jobs:
       - name: Lowercase repo path for GHCR
         run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
+      - name: Validate GHCR secrets exist
+        run: |
+          : "${{ secrets.GHCR_USERNAME?Need GHCR_USERNAME secret }}"
+          : "${{ secrets.PAT?Need PAT secret }}"
+
       - name: Deploy to Azure Container Apps (by digest)
         uses: azure/CLI@v1
         with:
@@ -72,12 +81,12 @@ jobs:
             az config set extension.use_dynamic_install=yes_without_prompt
             az extension add -n containerapp --upgrade -y || true
 
-            # Bind GHCR using PAT OWNER username
+            # Bind GHCR with PAT owner's username from secrets
             az containerapp registry set \
               -n ${{ env.AZURE_CONTAINER_APP_NAME }} \
               -g ${{ env.AZURE_GROUP_NAME }} \
               --server ghcr.io \
-              --username ${{ vars.GHCR_USERNAME }} \
+              --username ${{ secrets.GHCR_USERNAME }} \
               --password ${{ secrets.PAT }}
 
             IMAGE_REF="${{ needs.build.outputs.image_ref }}"
