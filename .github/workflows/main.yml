@@ -27,15 +27,15 @@ jobs:
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to GHCR (push with GITHUB_TOKEN)
+      # Push with PAT to avoid org policy blocking GITHUB_TOKEN
+      - name: Login to GHCR (push with PAT)
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.PAT }}
 
-      - name: Build & push image (tag latest)
-        id: build
+      - name: Build & push image (tag by commit SHA)
         uses: docker/build-push-action@v6
         with:
           push: true
@@ -61,8 +61,27 @@ jobs:
             az config set extension.use_dynamic_install=yes_without_prompt
             az extension add -n containerapp --upgrade -y || true
 
-            # GHCR is private: configure registry with the same PAT (username = PAT owner)
-            az containerapp registry set -n ${{env.AZURE_CONTAINER_APP_NAME}} -g ${{env.AZURE_GROUP_NAME}} --server ghcr.io --username ${{ github.actor }} --password ${{ secrets.PAT }}
+            # Bind private GHCR using the same PAT (username = PAT owner)
+            az containerapp registry set \
+              -n ${{ env.AZURE_CONTAINER_APP_NAME }} \
+              -g ${{ env.AZURE_GROUP_NAME }} \
+              --server ghcr.io \
+              --username ${{ github.actor }} \
+              --password ${{ secrets.PAT }}
 
-            # Set resources, env vars, and update image
-            az containerapp update -n ${{ env.AZURE_CONTAINER_APP_NAME  }} -g ${{ env.AZURE_GROUP_NAME  }} --cpu 2 --memory 4Gi --set-env-vars AZURE_OPENAI_ENDPOINT=${{ vars.AZURE_OPENAI_ENDPOINT }} AZURE_OPENAI_KEY=${{ secrets.AZURE_OPENAI_KEY }} AZURE_OPENAI_API_VERSION=${{ vars.AZURE_OPENAI_API_VERSION }} AZURE_OPENAI_CHAT_DEPLOYMENT=${{ vars.AZURE_OPENAI_CHAT_DEPLOYMENT }} AZURE_OPENAI_EMBEDDING_DEPLOYMENT=${{ vars.AZURE_OPENAI_EMBEDDING_DEPLOYMENT }} AZURE_SEARCH_ENDPOINT=${{ vars.AZURE_SEARCH_ENDPOINT }} AZURE_SEARCH_API_KEY=${{ secrets.AZURE_SEARCH_API_KEY }} AZURE_SEARCH_INDEX_NAME=${{ vars.AZURE_SEARCH_INDEX_NAME }} TOP_K=${{ vars.TOP_K }} TEMPERATURE=${{ vars.TEMPERATURE }} MAX_TOKENS=${{ vars.MAX_TOKENS }} --image ghcr.io/${{ env.REPO }}:${{ github.sha }}
+            # Update CPU/Mem, env vars (no quotes for numbers), and image tag we just pushed
+            az containerapp update \
+              -n ${{ env.AZURE_CONTAINER_APP_NAME }} \
+              -g ${{ env.AZURE_GROUP_NAME }} \
+              --cpu 2 --memory 4Gi \
+              --set-env-vars \
+                AZURE_OPENAI_ENDPOINT=${{ vars.AZURE_OPENAI_ENDPOINT }} \
+                AZURE_OPENAI_KEY=${{ secrets.AZURE_OPENAI_KEY }} \
+                AZURE_OPENAI_API_VERSION=${{ vars.AZURE_OPENAI_API_VERSION }} \
+                AZURE_OPENAI_CHAT_DEPLOYMENT=${{ vars.AZURE_OPENAI_CHAT_DEPLOYMENT }} \
+                AZURE_OPENAI_EMBEDDING_DEPLOYMENT=${{ vars.AZURE_OPENAI_EMBEDDING_DEPLOYMENT }} \
+                AZURE_SEARCH_ENDPOINT=${{ vars.AZURE_SEARCH_ENDPOINT }} \
+                AZURE_SEARCH_API_KEY=${{ secrets.AZURE_SEARCH_API_KEY }} \
+                AZURE_SEARCH_INDEX_NAME=${{ vars.AZURE_SEARCH_INDEX_NAME }} \
+                TOP_K=${{ vars.TOP_K }} TEMPERATURE=${{ vars.TEMPERATURE }} MAX_TOKENS=${{ vars.MAX_TOKENS }} \
+              --image ghcr.io/${{ env.REPO }}:${{ github.sha }}
