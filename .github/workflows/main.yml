@@ -13,8 +13,8 @@ permissions:
 env:
   AZURE_CONTAINER_APP_NAME: gdpr-rag-chat
   AZURE_RESOURCE_GROUP: suraj-project-azure
-  CONTAINER_PORT: "8000"     # matches your Dockerfile (uvicorn --port 8000)
   REGISTRY: ghcr.io
+  # Ingress target port is already set to 8000 manually in the portal
 
 concurrency:
   group: deploy-${{ github.ref_name }}
@@ -53,7 +53,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}  # built-in; you don't create this
+          password: ${{ secrets.GITHUB_TOKEN }}  # built-in; no need to create
 
       - name: Build & push image
         uses: docker/build-push-action@v6
@@ -89,7 +89,7 @@ jobs:
       - name: Configure GHCR registry (private GHCR)
         shell: bash
         env:
-          PAT_VALUE: ${{ secrets.PAT }}       # your personal access token (read:packages)
+          PAT_VALUE: ${{ secrets.PAT }}       # PAT with at least read:packages
         run: |
           set -euo pipefail
           az config set extension.use_dynamic_install=yes_without_prompt
@@ -107,26 +107,6 @@ jobs:
             --server ghcr.io \
             --username "${OWNER}" \
             --password "${PAT_VALUE}"
-
-      # Switch ingress target port from quickstart's 80 to your app's 8000
-      - name: Update ingress target port
-        shell: bash
-        run: |
-          set -euo pipefail
-          az config set extension.use_dynamic_install=yes_without_prompt
-          az extension add -n containerapp --upgrade -y || true
-
-          az containerapp ingress set \
-            --name "${AZURE_CONTAINER_APP_NAME}" \
-            --resource-group "${AZURE_RESOURCE_GROUP}" \
-            --type external \
-            --target-port "${CONTAINER_PORT}" \
-            --transport auto
-          # To enforce HTTPS-only, uncomment:
-          # az containerapp ingress tls set \
-          #   --name "${AZURE_CONTAINER_APP_NAME}" \
-          #   --resource-group "${AZURE_RESOURCE_GROUP}" \
-          #   --tls-redirect-enabled true
 
       # Update image + env vars + resources (2 vCPU / 4 GiB per replica)
       - name: Update image, env, and resources (2 CPU / 4GiB)
