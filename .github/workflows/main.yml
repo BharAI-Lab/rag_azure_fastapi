@@ -1,7 +1,7 @@
 name: Build & Deploy GDPR RAG Chat
 
 env:
-  AZURE_CONTAINER_APP_NAME: gdpr-rag-chat
+  AZURE_CONTAINER_APP_NAME: rag-container
   AZURE_GROUP_NAME: suraj-project-azure
 
 on:
@@ -52,15 +52,12 @@ jobs:
         shell: bash
         run: |
           az config set extension.use_dynamic_install=yes_without_prompt
-          az extension add -n containerapp --upgrade -y || true
-          # GHCR is private: configure registry with the same PAT (username = PAT owner)
           az containerapp registry set \
             -n "${AZURE_CONTAINER_APP_NAME}" \
             -g "${AZURE_GROUP_NAME}" \
             --server ghcr.io \
             --username "SurajBhar" \
             --password "${{ secrets.PAT }}"
-          # Set resources, env vars, and update image
           az containerapp update \
             -n "${AZURE_CONTAINER_APP_NAME}" \
             -g "${AZURE_GROUP_NAME}" \
@@ -74,5 +71,5 @@ jobs:
               AZURE_SEARCH_ENDPOINT='${{ vars.AZURE_SEARCH_ENDPOINT }}' \
               AZURE_SEARCH_API_KEY='${{ secrets.AZURE_SEARCH_API_KEY }}' \
               AZURE_SEARCH_INDEX_NAME='${{ vars.AZURE_SEARCH_INDEX_NAME }}' \
-              TOP_K='4' TEMPERATURE='0.2' MAX_TOKENS='800' \
+              TOP_K='${{ vars.TOP_K }}' TEMPERATURE='${{ vars.TEMPERATURE }}' MAX_TOKENS='${{ vars.MAX_TOKENS }}' \
             --image ghcr.io/${{ env.REPO }}:${{ github.sha }}
