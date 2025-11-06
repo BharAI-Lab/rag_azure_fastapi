@@ -5,36 +5,64 @@ env:
   AZURE_GROUP_NAME: suraj-project-azure
 
 on:
-  # push:
-  #   branches: [ main ]
   workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      image_ref: ${{ steps.meta.outputs.image_ref }}
+      image_digest: ${{ steps.push.outputs.digest }}
     steps:
-      - name: Checkout to the branch
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
+      - name: Lowercase repo for GHCR path
+        shell: bash
+        run: echo "REPO=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
+      - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GitHub container registry (use PAT)
+      # Push to GHCR with PAT (owner: SurajBhar) — SSO must be granted to org BharAI-Lab
+      - name: Login to GHCR (push with PAT)
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: SurajBhar
           password: ${{ secrets.PAT }}
 
-      - name: Lowercase the repo name
-        run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
-
-      - name: Build and push container image to registry
+      - name: Build & push image (tag = commit SHA)
+        id: push
         uses: docker/build-push-action@v6
         with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ env.REPO }}:${{ github.sha }}
-          file: ./Dockerfile
+          # Link package to this repo's Packages tab
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          provenance: false
+
+      - name: Verify tag exists & show digest
+        shell: bash
+        run: |
+          echo "🔎 ghcr.io/${REPO}:${GITHUB_SHA}"
+          docker buildx imagetools inspect ghcr.io/${REPO}:${GITHUB_SHA} >/dev/null
+          echo "✅ Digest from push: ${{ steps.push.outputs.digest }}"
+
+      - name: Expose image ref for deploy
+        id: meta
+        shell: bash
+        run: |
+          echo "image_ref=ghcr.io/${REPO}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
 
   deploy:
     runs-on: ubuntu-latest
@@ -45,31 +73,55 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Lowercase the repo name
-        run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
-
-      - name: Deploy to Azure Container Apps
+      - name: Lowercase repo for GHCR path
         shell: bash
-        run: |
-          az config set extension.use_dynamic_install=yes_without_prompt
-          az containerapp registry set \
-            -n "${AZURE_CONTAINER_APP_NAME}" \
-            -g "${AZURE_GROUP_NAME}" \
-            --server ghcr.io \
-            --username "SurajBhar" \
-            --password "${{ secrets.PAT }}"
-          az containerapp update \
-            -n "${AZURE_CONTAINER_APP_NAME}" \
-            -g "${AZURE_GROUP_NAME}" \
-            --cpu 2 --memory 4Gi \
-            --set-env-vars \
-              AZURE_OPENAI_ENDPOINT='${{ vars.AZURE_OPENAI_ENDPOINT }}' \
-              AZURE_OPENAI_KEY='${{ secrets.AZURE_OPENAI_KEY }}' \
-              AZURE_OPENAI_API_VERSION='${{ vars.AZURE_OPENAI_API_VERSION }}' \
-              AZURE_OPENAI_CHAT_DEPLOYMENT='${{ vars.AZURE_OPENAI_CHAT_DEPLOYMENT }}' \
-              AZURE_OPENAI_EMBEDDING_DEPLOYMENT='${{ vars.AZURE_OPENAI_EMBEDDING_DEPLOYMENT }}' \
-              AZURE_SEARCH_ENDPOINT='${{ vars.AZURE_SEARCH_ENDPOINT }}' \
-              AZURE_SEARCH_API_KEY='${{ secrets.AZURE_SEARCH_API_KEY }}' \
-              AZURE_SEARCH_INDEX_NAME='${{ vars.AZURE_SEARCH_INDEX_NAME }}' \
-              TOP_K='${{ vars.TOP_K }}' TEMPERATURE='${{ vars.TEMPERATURE }}' MAX_TOKENS='${{ vars.MAX_TOKENS }}' \
-            --image ghcr.io/${{ env.REPO }}:${{ github.sha }}
+        run: echo "REPO=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
+      - name: Deploy to Azure Container Apps (by digest, fix ingress/port)
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            set -euo pipefail
+            az config set extension.use_dynamic_install=yes_without_prompt
+            az extension add -n containerapp --upgrade -y || true
+
+            # Allow ACA to pull private image from GHCR with PAT
+            az containerapp registry set \
+              -n "${AZURE_CONTAINER_APP_NAME}" \
+              -g "${AZURE_GROUP_NAME}" \
+              --server ghcr.io \
+              --username "SurajBhar" \
+              --password "${{ secrets.PAT }}"
+
+            IMAGE_REF="${{ needs.build.outputs.image_ref }}"
+            IMAGE_DIGEST="${{ needs.build.outputs.image_digest }}"
+
+            echo "🚀 Updating ACA to image: ${IMAGE_REF}@${IMAGE_DIGEST}"
+
+            # Ensure external ingress + correct target port + PORT env expected by your Dockerfile
+            az containerapp update \
+              -n "${AZURE_CONTAINER_APP_NAME}" \
+              -g "${AZURE_GROUP_NAME}" \
+              --ingress external \
+              --target-port 8000 \
+              --min-replicas 1 \
+              --set-env-vars \
+                PORT=8000 \
+                AZURE_OPENAI_ENDPOINT=${{ vars.AZURE_OPENAI_ENDPOINT }} \
+                AZURE_OPENAI_KEY=${{ secrets.AZURE_OPENAI_KEY }} \
+                AZURE_OPENAI_API_VERSION=${{ vars.AZURE_OPENAI_API_VERSION }} \
+                AZURE_OPENAI_CHAT_DEPLOYMENT=${{ vars.AZURE_OPENAI_CHAT_DEPLOYMENT }} \
+                AZURE_OPENAI_EMBEDDING_DEPLOYMENT=${{ vars.AZURE_OPENAI_EMBEDDING_DEPLOYMENT }} \
+                AZURE_SEARCH_ENDPOINT=${{ vars.AZURE_SEARCH_ENDPOINT }} \
+                AZURE_SEARCH_API_KEY=${{ secrets.AZURE_SEARCH_API_KEY }} \
+                AZURE_SEARCH_INDEX_NAME=${{ vars.AZURE_SEARCH_INDEX_NAME }} \
+                TOP_K=${{ vars.TOP_K }} \
+                TEMPERATURE=${{ vars.TEMPERATURE }} \
+                MAX_TOKENS=${{ vars.MAX_TOKENS }} \
+              --image "${IMAGE_REF}@${IMAGE_DIGEST}"
+
+            echo "📋 Template (ports/env) after update:"
+            az containerapp show \
+              -n "${AZURE_CONTAINER_APP_NAME}" \
+              -g "${AZURE_GROUP_NAME}" \
+              --query "properties.template" -o yaml
