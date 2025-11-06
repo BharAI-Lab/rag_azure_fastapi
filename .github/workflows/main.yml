@@ -53,9 +53,9 @@ jobs:
       - name: Verify tag exists & show digest
         shell: bash
         run: |
-          echo "🔎 ghcr.io/${REPO}:${GITHUB_SHA}"
+          echo "ghcr.io/${REPO}:${GITHUB_SHA}"
           docker buildx imagetools inspect ghcr.io/${REPO}:${GITHUB_SHA} >/dev/null
-          echo "✅ Digest from push: ${{ steps.push.outputs.digest }}"
+          echo "Digest from push: ${{ steps.push.outputs.digest }}"
 
       - name: Expose image ref for deploy
         id: meta
@@ -94,7 +94,7 @@ jobs:
 
             IMAGE_REF="${{ needs.build.outputs.image_ref }}"
             IMAGE_DIGEST="${{ needs.build.outputs.image_digest }}"
-            echo "🚀 Updating ACA to image: ${IMAGE_REF}@${IMAGE_DIGEST}"
+            echo "Updating ACA to image: ${IMAGE_REF}@${IMAGE_DIGEST}"
 
             # 1) Update resources/env + set image (NO ingress flags here)
             az containerapp update \
@@ -130,7 +130,7 @@ jobs:
               --type external \
               --target-port 8000
 
-            echo "📋 Template (ports/env) after update:"
+            echo "Template (ports/env) after update:"
             az containerapp show \
               -n "${AZURE_CONTAINER_APP_NAME}" \
               -g "${AZURE_GROUP_NAME}" \
