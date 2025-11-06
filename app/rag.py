@@ -52,7 +52,8 @@ vs = AzureSearch(
 # Config (safe defaults if not present in settings)
 # -----------------------------
 # Strong retrieval threshold for top-1 score (tune as needed).
-STRONG_SCORE: float = float(getattr(settings, "RAG_STRONG_SCORE", 0.55))
+#STRONG_SCORE: float = float(getattr(settings, "RAG_STRONG_SCORE", 0.55))
+STRONG_SCORE: float = float(0.55)
 TOP_K: int = int(getattr(settings, "TOP_K", 4))
 TEMPERATURE: float = float(getattr(settings, "TEMPERATURE", 0.2))
 MAX_TOKENS: int = int(getattr(settings, "MAX_TOKENS", 800))
