@@ -1,0 +1,351 @@
+[50]:
+  - id: 1
+    difficulty: easy
+    question: "According to Principles relating to processing of personal data, what is one key requirement or rule stated?"
+    answer: "Personal data shall be: processed lawfully, fairly and in a transparent manner in relation to the data subject ('lawfulness, fairness and transparency');."
+    article_or_recital: "article5: Principles relating to processing of personal data"
+    recitals[1]: "39"
+    answer_span: "Personal data shall be: processed lawfully, fairly and in a transparent manner in relation to the data subject ('lawfulness, fairness and transparency');."
+  - id: 2
+    difficulty: medium
+    question: "In Principles relating to processing of personal data, how is the following expressed: 'Personal data shall be: processed lawfully'? Provide the exact wording."
+    answer: "Personal data shall be: processed lawfully, fairly and in a transparent manner in relation to the data subject ('lawfulness, fairness and transparency');."
+    article_or_recital: "article5: Principles relating to processing of personal data"
+    recitals[1]: "39"
+    answer_span: "Personal data shall be: processed lawfully, fairly and in a transparent manner in relation to the data subject ('lawfulness, fairness and transparency');."
+  - id: 3
+    difficulty: easy
+    question: "According to Lawfulness of processing, what is one key requirement or rule stated?"
+    answer: "Processing shall be lawful only if and to the extent that at least one of the following applies:  the data subject has given consent to the processing of his or her personal data for one or more specific purposes;."
+    article_or_recital: "article6: Lawfulness of processing"
+    recitals[2]: "40","42"
+    answer_span: "Processing shall be lawful only if and to the extent that at least one of the following applies:  the data subject has given consent to the processing of his or her personal data for one or more specific purposes;."
+  - id: 4
+    difficulty: medium
+    question: "In Lawfulness of processing, how is the following expressed: 'Processing shall be lawful only if and to the extent that at least one of the following applies:  the data subject has given consent to the processing of his or her personal data for one or more specific purposes;.'? Provide the exact wording."
+    answer: "Processing shall be lawful only if and to the extent that at least one of the following applies:  the data subject has given consent to the processing of his or her personal data for one or more specific purposes;."
+    article_or_recital: "article6: Lawfulness of processing"
+    recitals[2]: "40","42"
+    answer_span: "Processing shall be lawful only if and to the extent that at least one of the following applies:  the data subject has given consent to the processing of his or her personal data for one or more specific purposes;."
+  - id: 5
+    difficulty: easy
+    question: "According to Conditions for consent, what is one key requirement or rule stated?"
+    answer: "Where processing is based on consent, the controller shall be able to demonstrate that the data subject has consented to processing of his or her personal data."
+    article_or_recital: "article7: Conditions for consent"
+    recitals[2]: "32","33"
+    answer_span: "Where processing is based on consent, the controller shall be able to demonstrate that the data subject has consented to processing of his or her personal data."
+  - id: 6
+    difficulty: medium
+    question: "In Conditions for consent, how is the following expressed: 'Where processing is based on consent'? Provide the exact wording."
+    answer: "Where processing is based on consent, the controller shall be able to demonstrate that the data subject has consented to processing of his or her personal data."
+    article_or_recital: "article7: Conditions for consent"
+    recitals[2]: "32","33"
+    answer_span: "Where processing is based on consent, the controller shall be able to demonstrate that the data subject has consented to processing of his or her personal data."
+  - id: 7
+    difficulty: easy
+    question: "According to Processing of special categories of personal data, what is one key requirement or rule stated?"
+    answer: "Processing of personal data revealing racial or ethnic origin, political opinions, religious or philosophical beliefs, or trade union membership, and the processing of genetic data, biometric data for the purpose of uniquely identifying a natural person, data concerning health or data concerning a natural person's sex life or sexual orientation shall be prohibited."
+    article_or_recital: "article9: Processing of special categories of personal data"
+    recitals[1]: "51"
+    answer_span: "Processing of personal data revealing racial or ethnic origin, political opinions, religious or philosophical beliefs, or trade union membership, and the processing of genetic data, biometric data for the purpose of uniquely identifying a natural person, data concerning health or data concerning a natural person's sex life or sexual orientation shall be prohibited."
+  - id: 8
+    difficulty: medium
+    question: "In Processing of special categories of personal data, how is the following expressed: 'Processing of personal data revealing racial or ethnic origin'? Provide the exact wording."
+    answer: "Processing of personal data revealing racial or ethnic origin, political opinions, religious or philosophical beliefs, or trade union membership, and the processing of genetic data, biometric data for the purpose of uniquely identifying a natural person, data concerning health or data concerning a natural person's sex life or sexual orientation shall be prohibited."
+    article_or_recital: "article9: Processing of special categories of personal data"
+    recitals[1]: "51"
+    answer_span: "Processing of personal data revealing racial or ethnic origin, political opinions, religious or philosophical beliefs, or trade union membership, and the processing of genetic data, biometric data for the purpose of uniquely identifying a natural person, data concerning health or data concerning a natural person's sex life or sexual orientation shall be prohibited."
+  - id: 9
+    difficulty: easy
+    question: "According to Right to rectification, what is one key requirement or rule stated?"
+    answer: The data subject shall have the right to obtain from the controller without undue delay the rectification of inaccurate personal data concerning him or her.
+    article_or_recital: "article16: Right to rectification"
+    recitals[0]:
+    answer_span: The data subject shall have the right to obtain from the controller without undue delay the rectification of inaccurate personal data concerning him or her.
+  - id: 10
+    difficulty: medium
+    question: "In Right to rectification, how is the following expressed: 'The data subject shall have the right to obtain from the controller without undue delay the rectification of inaccurate personal data concerning him or her.'? Provide the exact wording."
+    answer: The data subject shall have the right to obtain from the controller without undue delay the rectification of inaccurate personal data concerning him or her.
+    article_or_recital: "article16: Right to rectification"
+    recitals[0]:
+    answer_span: The data subject shall have the right to obtain from the controller without undue delay the rectification of inaccurate personal data concerning him or her.
+  - id: 11
+    difficulty: easy
+    question: "According to Right to erasure ('right to be forgotten'), what is one key requirement or rule stated?"
+    answer: "The data subject shall have the right to obtain from the controller the erasure of personal data concerning him or her without undue delay and the controller shall have the obligation to erase personal data without undue delay where one of the following grounds applies: the personal data are no longer necessary in relation to the purposes for which they were collected or otherwise processed;."
+    article_or_recital: "article17: Right to erasure ('right to be forgotten')"
+    recitals[2]: "65","66"
+    answer_span: "The data subject shall have the right to obtain from the controller the erasure of personal data concerning him or her without undue delay and the controller shall have the obligation to erase personal data without undue delay where one of the following grounds applies: the personal data are no longer necessary in relation to the purposes for which they were collected or otherwise processed;."
+  - id: 12
+    difficulty: medium
+    question: "In Right to erasure ('right to be forgotten'), how is the following expressed: 'The data subject shall have the right to obtain from the controller the erasure of personal data concerning him or her without undue delay and the controller shall have the obligation to erase personal data without undue delay where one of the following grounds applies: the personal data are no longer necessary in relation to the purposes for which they were collected or otherwise processed;.'? Provide the exact wording."
+    answer: "The data subject shall have the right to obtain from the controller the erasure of personal data concerning him or her without undue delay and the controller shall have the obligation to erase personal data without undue delay where one of the following grounds applies: the personal data are no longer necessary in relation to the purposes for which they were collected or otherwise processed;."
+    article_or_recital: "article17: Right to erasure ('right to be forgotten')"
+    recitals[2]: "65","66"
+    answer_span: "The data subject shall have the right to obtain from the controller the erasure of personal data concerning him or her without undue delay and the controller shall have the obligation to erase personal data without undue delay where one of the following grounds applies: the personal data are no longer necessary in relation to the purposes for which they were collected or otherwise processed;."
+  - id: 13
+    difficulty: easy
+    question: "According to Right to restriction of processing, what is one key requirement or rule stated?"
+    answer: "The data subject shall have the right to obtain from the controller restriction of processing where: the accuracy of the personal data is contested by the data subject, for a period enabling the controller to verify the accuracy of the personal data;."
+    article_or_recital: "article18: Right to restriction of processing"
+    recitals[1]: "67"
+    answer_span: "The data subject shall have the right to obtain from the controller restriction of processing where: the accuracy of the personal data is contested by the data subject, for a period enabling the controller to verify the accuracy of the personal data;."
+  - id: 14
+    difficulty: medium
+    question: "In Right to restriction of processing, how is the following expressed: 'The data subject shall have the right to obtain from the controller restriction of processing where: the accuracy of the personal data is contested by the data subject'? Provide the exact wording."
+    answer: "The data subject shall have the right to obtain from the controller restriction of processing where: the accuracy of the personal data is contested by the data subject, for a period enabling the controller to verify the accuracy of the personal data;."
+    article_or_recital: "article18: Right to restriction of processing"
+    recitals[1]: "67"
+    answer_span: "The data subject shall have the right to obtain from the controller restriction of processing where: the accuracy of the personal data is contested by the data subject, for a period enabling the controller to verify the accuracy of the personal data;."
+  - id: 15
+    difficulty: easy
+    question: "According to Right to data portability, what is one key requirement or rule stated?"
+    answer: "The data subject shall have the right to receive the personal data concerning him or her, which he or she has provided to a controller, in a structured, commonly used and machine-readable format and have the right to transmit those data to another controller without hindrance from the controller to which the personal data have been provided, where: the processing is based on consent pursuant to 'the data subject has given consent to the processing of his or her personal data for one or more specific purposes' (Article 6(1)-(a)) or based on consent pursuant to 'the data subject has given explicit consent to the processing of those personal data for one or more specified purposes, except where Union or Member State law provide that the prohibition  may not be lifted by the data subject' (Article 9(2)-(a)) or on a contract 'to which the data subject is party or in order to take steps at the request of the data subject prior to entering into a contract' (Article 6(1)-(b)); and the processing is carried out by automated means."
+    article_or_recital: "article20: Right to data portability"
+    recitals[1]: "68"
+    answer_span: "The data subject shall have the right to receive the personal data concerning him or her, which he or she has provided to a controller, in a structured, commonly used and machine-readable format and have the right to transmit those data to another controller without hindrance from the controller to which the personal data have been provided, where: the processing is based on consent pursuant to 'the data subject has given consent to the processing of his or her personal data for one or more specific purposes' (Article 6(1)-(a)) or based on consent pursuant to 'the data subject has given explicit consent to the processing of those personal data for one or more specified purposes, except where Union or Member State law provide that the prohibition  may not be lifted by the data subject' (Article 9(2)-(a)) or on a contract 'to which the data subject is party or in order to take steps at the request of the data subject prior to entering into a contract' (Article 6(1)-(b)); and the processing is carried out by automated means."
+  - id: 16
+    difficulty: medium
+    question: "In Right to data portability, how is the following expressed: 'The data subject shall have the right to receive the personal data concerning him or her'? Provide the exact wording."
+    answer: "The data subject shall have the right to receive the personal data concerning him or her, which he or she has provided to a controller, in a structured, commonly used and machine-readable format and have the right to transmit those data to another controller without hindrance from the controller to which the personal data have been provided, where: the processing is based on consent pursuant to 'the data subject has given consent to the processing of his or her personal data for one or more specific purposes' (Article 6(1)-(a)) or based on consent pursuant to 'the data subject has given explicit consent to the processing of those personal data for one or more specified purposes, except where Union or Member State law provide that the prohibition  may not be lifted by the data subject' (Article 9(2)-(a)) or on a contract 'to which the data subject is party or in order to take steps at the request of the data subject prior to entering into a contract' (Article 6(1)-(b)); and the processing is carried out by automated means."
+    article_or_recital: "article20: Right to data portability"
+    recitals[1]: "68"
+    answer_span: "The data subject shall have the right to receive the personal data concerning him or her, which he or she has provided to a controller, in a structured, commonly used and machine-readable format and have the right to transmit those data to another controller without hindrance from the controller to which the personal data have been provided, where: the processing is based on consent pursuant to 'the data subject has given consent to the processing of his or her personal data for one or more specific purposes' (Article 6(1)-(a)) or based on consent pursuant to 'the data subject has given explicit consent to the processing of those personal data for one or more specified purposes, except where Union or Member State law provide that the prohibition  may not be lifted by the data subject' (Article 9(2)-(a)) or on a contract 'to which the data subject is party or in order to take steps at the request of the data subject prior to entering into a contract' (Article 6(1)-(b)); and the processing is carried out by automated means."
+  - id: 17
+    difficulty: easy
+    question: "According to Right to object, what is one key requirement or rule stated?"
+    answer: "The data subject shall have the right to object, on grounds relating to his or her particular situation, at any time to processing of personal data concerning him or her which is based on Article 6(1)-(e,f), including profiling based on those provisions."
+    article_or_recital: "article21: Right to object"
+    recitals[1]: "69"
+    answer_span: "The data subject shall have the right to object, on grounds relating to his or her particular situation, at any time to processing of personal data concerning him or her which is based on Article 6(1)-(e,f), including profiling based on those provisions."
+  - id: 18
+    difficulty: medium
+    question: "In Right to object, how is the following expressed: 'The data subject shall have the right to object'? Provide the exact wording."
+    answer: "The data subject shall have the right to object, on grounds relating to his or her particular situation, at any time to processing of personal data concerning him or her which is based on Article 6(1)-(e,f), including profiling based on those provisions."
+    article_or_recital: "article21: Right to object"
+    recitals[1]: "69"
+    answer_span: "The data subject shall have the right to object, on grounds relating to his or her particular situation, at any time to processing of personal data concerning him or her which is based on Article 6(1)-(e,f), including profiling based on those provisions."
+  - id: 19
+    difficulty: easy
+    question: "According to Automated individual decision-making, including profiling, what is one key requirement or rule stated?"
+    answer: "The data subject shall have the right not to be subject to a decision based solely on automated processing, including profiling, which produces legal effects concerning him or her or similarly significantly affects him or her."
+    article_or_recital: "article22: Automated individual decision-making, including profiling"
+    recitals[2]: "71","72"
+    answer_span: "The data subject shall have the right not to be subject to a decision based solely on automated processing, including profiling, which produces legal effects concerning him or her or similarly significantly affects him or her."
+  - id: 20
+    difficulty: medium
+    question: "In Automated individual decision-making, including profiling, how is the following expressed: 'The data subject shall have the right not to be subject to a decision based solely on automated processing'? Provide the exact wording."
+    answer: "The data subject shall have the right not to be subject to a decision based solely on automated processing, including profiling, which produces legal effects concerning him or her or similarly significantly affects him or her."
+    article_or_recital: "article22: Automated individual decision-making, including profiling"
+    recitals[2]: "71","72"
+    answer_span: "The data subject shall have the right not to be subject to a decision based solely on automated processing, including profiling, which produces legal effects concerning him or her or similarly significantly affects him or her."
+  - id: 21
+    difficulty: easy
+    question: "According to Joint controllers, what is one key requirement or rule stated?"
+    answer: "Where two or more controllers jointly determine the purposes and means of processing, they shall be joint controllers."
+    article_or_recital: "article26: Joint controllers"
+    recitals[1]: "79"
+    answer_span: "Where two or more controllers jointly determine the purposes and means of processing, they shall be joint controllers."
+  - id: 22
+    difficulty: medium
+    question: "In Joint controllers, how is the following expressed: 'Where two or more controllers jointly determine the purposes and means of processing'? Provide the exact wording."
+    answer: "Where two or more controllers jointly determine the purposes and means of processing, they shall be joint controllers."
+    article_or_recital: "article26: Joint controllers"
+    recitals[1]: "79"
+    answer_span: "Where two or more controllers jointly determine the purposes and means of processing, they shall be joint controllers."
+  - id: 23
+    difficulty: easy
+    question: "According to Representatives of controllers or processors not established in the Union, what is one key requirement or rule stated?"
+    answer: "Where Article 3(2) applies, the controller or the processor shall designate in writing a representative in the Union."
+    article_or_recital: "article27: Representatives of controllers or processors not established in the Union"
+    recitals[1]: "80"
+    answer_span: "Where Article 3(2) applies, the controller or the processor shall designate in writing a representative in the Union."
+  - id: 24
+    difficulty: medium
+    question: "In Representatives of controllers or processors not established in the Union, how is the following expressed: 'Where Article 3(2) applies'? Provide the exact wording."
+    answer: "Where Article 3(2) applies, the controller or the processor shall designate in writing a representative in the Union."
+    article_or_recital: "article27: Representatives of controllers or processors not established in the Union"
+    recitals[1]: "80"
+    answer_span: "Where Article 3(2) applies, the controller or the processor shall designate in writing a representative in the Union."
+  - id: 25
+    difficulty: easy
+    question: "According to Records of processing activities, what is one key requirement or rule stated?"
+    answer: "Each controller and, where applicable, the controller's representative, shall maintain a record of processing activities under its responsibility."
+    article_or_recital: "article30: Records of processing activities"
+    recitals[3]: "13","39","82"
+    answer_span: "Each controller and, where applicable, the controller's representative, shall maintain a record of processing activities under its responsibility."
+  - id: 26
+    difficulty: medium
+    question: "In Records of processing activities, how is the following expressed: 'Each controller and'? Provide the exact wording."
+    answer: "Each controller and, where applicable, the controller's representative, shall maintain a record of processing activities under its responsibility."
+    article_or_recital: "article30: Records of processing activities"
+    recitals[3]: "13","39","82"
+    answer_span: "Each controller and, where applicable, the controller's representative, shall maintain a record of processing activities under its responsibility."
+  - id: 27
+    difficulty: easy
+    question: "According to Security of processing, what is one key requirement or rule stated?"
+    answer: "Taking into account the state of the art, the costs of implementation and the nature, scope, context and purposes of processing as well as the risk of varying likelihood and severity for the rights and freedoms of natural persons, the controller and the processor shall implement appropriate technical and organisational measures to ensure a level of security appropriate to the risk, including inter alia as appropriate: the pseudonymisation and encryption of personal data; compliance with this requirement may be demonstrated based on adherence to an approved code of conduct as referred to in Article 40 or an approved certification mechanism as referred to in Article 42."
+    article_or_recital: "article32: Security of processing"
+    recitals[5]: "83","74","85","76","77"
+    answer_span: "Taking into account the state of the art, the costs of implementation and the nature, scope, context and purposes of processing as well as the risk of varying likelihood and severity for the rights and freedoms of natural persons, the controller and the processor shall implement appropriate technical and organisational measures to ensure a level of security appropriate to the risk, including inter alia as appropriate: the pseudonymisation and encryption of personal data; compliance with this requirement may be demonstrated based on adherence to an approved code of conduct as referred to in Article 40 or an approved certification mechanism as referred to in Article 42."
+  - id: 28
+    difficulty: medium
+    question: "In Security of processing, how is the following expressed: 'Taking into account the state of the art'? Provide the exact wording."
+    answer: "Taking into account the state of the art, the costs of implementation and the nature, scope, context and purposes of processing as well as the risk of varying likelihood and severity for the rights and freedoms of natural persons, the controller and the processor shall implement appropriate technical and organisational measures to ensure a level of security appropriate to the risk, including inter alia as appropriate: the pseudonymisation and encryption of personal data; compliance with this requirement may be demonstrated based on adherence to an approved code of conduct as referred to in Article 40 or an approved certification mechanism as referred to in Article 42."
+    article_or_recital: "article32: Security of processing"
+    recitals[5]: "83","74","85","76","77"
+    answer_span: "Taking into account the state of the art, the costs of implementation and the nature, scope, context and purposes of processing as well as the risk of varying likelihood and severity for the rights and freedoms of natural persons, the controller and the processor shall implement appropriate technical and organisational measures to ensure a level of security appropriate to the risk, including inter alia as appropriate: the pseudonymisation and encryption of personal data; compliance with this requirement may be demonstrated based on adherence to an approved code of conduct as referred to in Article 40 or an approved certification mechanism as referred to in Article 42."
+  - id: 29
+    difficulty: easy
+    question: "According to Data protection by design and by default, what is one key requirement or rule stated?"
+    answer: "Taking into account the state of the art, the cost of implementation and the nature, scope, context and purposes of processing as well as the risks of varying likelihood and severity for rights and freedoms of natural persons posed by the processing, the controller shall, both at the time of the determination of the means for processing and at the time of the processing itself, implement appropriate technical and organisational measures, such as pseudonymisation, which are designed to implement data-protection principles, such as data minimisation, in an effective manner and to integrate the necessary safeguards into the processing in order to meet the requirements of this Regulation and protect the rights of data subjects."
+    article_or_recital: "article25: Data protection by design and by default"
+    recitals[1]: "78"
+    answer_span: "Taking into account the state of the art, the cost of implementation and the nature, scope, context and purposes of processing as well as the risks of varying likelihood and severity for rights and freedoms of natural persons posed by the processing, the controller shall, both at the time of the determination of the means for processing and at the time of the processing itself, implement appropriate technical and organisational measures, such as pseudonymisation, which are designed to implement data-protection principles, such as data minimisation, in an effective manner and to integrate the necessary safeguards into the processing in order to meet the requirements of this Regulation and protect the rights of data subjects."
+  - id: 30
+    difficulty: medium
+    question: "In Data protection by design and by default, how is the following expressed: 'Taking into account the state of the art'? Provide the exact wording."
+    answer: "Taking into account the state of the art, the cost of implementation and the nature, scope, context and purposes of processing as well as the risks of varying likelihood and severity for rights and freedoms of natural persons posed by the processing, the controller shall, both at the time of the determination of the means for processing and at the time of the processing itself, implement appropriate technical and organisational measures, such as pseudonymisation, which are designed to implement data-protection principles, such as data minimisation, in an effective manner and to integrate the necessary safeguards into the processing in order to meet the requirements of this Regulation and protect the rights of data subjects."
+    article_or_recital: "article25: Data protection by design and by default"
+    recitals[1]: "78"
+    answer_span: "Taking into account the state of the art, the cost of implementation and the nature, scope, context and purposes of processing as well as the risks of varying likelihood and severity for rights and freedoms of natural persons posed by the processing, the controller shall, both at the time of the determination of the means for processing and at the time of the processing itself, implement appropriate technical and organisational measures, such as pseudonymisation, which are designed to implement data-protection principles, such as data minimisation, in an effective manner and to integrate the necessary safeguards into the processing in order to meet the requirements of this Regulation and protect the rights of data subjects."
+  - id: 31
+    difficulty: easy
+    question: "According to Designation of the data protection officer, what is one key requirement or rule stated?"
+    answer: "The controller and the processor shall designate a data protection officer in any case where: the processing is carried out by a public authority or body, except for courts acting in their judicial capacity;."
+    article_or_recital: "article37: Designation of the data protection officer"
+    recitals[1]: "97"
+    answer_span: "The controller and the processor shall designate a data protection officer in any case where: the processing is carried out by a public authority or body, except for courts acting in their judicial capacity;."
+  - id: 32
+    difficulty: medium
+    question: "In Designation of the data protection officer, how is the following expressed: 'The controller and the processor shall designate a data protection officer in any case where: the processing is carried out by a public authority or body'? Provide the exact wording."
+    answer: "The controller and the processor shall designate a data protection officer in any case where: the processing is carried out by a public authority or body, except for courts acting in their judicial capacity;."
+    article_or_recital: "article37: Designation of the data protection officer"
+    recitals[1]: "97"
+    answer_span: "The controller and the processor shall designate a data protection officer in any case where: the processing is carried out by a public authority or body, except for courts acting in their judicial capacity;."
+  - id: 33
+    difficulty: easy
+    question: "According to Communication of a personal data breach to the data subject, what is one key requirement or rule stated?"
+    answer: "When the personal data breach is likely to result in a high risk to the rights and freedoms of natural persons, the controller shall communicate the personal data breach to the data subject without undue delay."
+    article_or_recital: "article34: Communication of a personal data breach to the data subject"
+    recitals[4]: "85","86","87","88"
+    answer_span: "When the personal data breach is likely to result in a high risk to the rights and freedoms of natural persons, the controller shall communicate the personal data breach to the data subject without undue delay."
+  - id: 34
+    difficulty: medium
+    question: "In Communication of a personal data breach to the data subject, how is the following expressed: 'When the personal data breach is likely to result in a high risk to the rights and freedoms of natural persons'? Provide the exact wording."
+    answer: "When the personal data breach is likely to result in a high risk to the rights and freedoms of natural persons, the controller shall communicate the personal data breach to the data subject without undue delay."
+    article_or_recital: "article34: Communication of a personal data breach to the data subject"
+    recitals[4]: "85","86","87","88"
+    answer_span: "When the personal data breach is likely to result in a high risk to the rights and freedoms of natural persons, the controller shall communicate the personal data breach to the data subject without undue delay."
+  - id: 35
+    difficulty: easy
+    question: "According to Prior consultation, what is one key requirement or rule stated?"
+    answer: The controller shall consult the supervisory authority prior to processing where a data protection impact assessment under Article 35 indicates that the processing would result in a high risk in the absence of measures taken by the controller to mitigate the risk.
+    article_or_recital: "article36: Prior consultation"
+    recitals[3]: "94","95","96"
+    answer_span: The controller shall consult the supervisory authority prior to processing where a data protection impact assessment under Article 35 indicates that the processing would result in a high risk in the absence of measures taken by the controller to mitigate the risk.
+  - id: 36
+    difficulty: medium
+    question: "In Prior consultation, how is the following expressed: 'The controller shall consult the supervisory authority prior to processing where a data protection impact assessment under Article 35 indicates that the processing would result in a high risk in the absence of measures taken by the controller to mitigate the risk.'? Provide the exact wording."
+    answer: The controller shall consult the supervisory authority prior to processing where a data protection impact assessment under Article 35 indicates that the processing would result in a high risk in the absence of measures taken by the controller to mitigate the risk.
+    article_or_recital: "article36: Prior consultation"
+    recitals[3]: "94","95","96"
+    answer_span: The controller shall consult the supervisory authority prior to processing where a data protection impact assessment under Article 35 indicates that the processing would result in a high risk in the absence of measures taken by the controller to mitigate the risk.
+  - id: 37
+    difficulty: easy
+    question: "According to Certification, what is one key requirement or rule stated?"
+    answer: "The Member States, the supervisory authorities, the Board and the Commission shall encourage, in particular at Union level, the establishment of data protection certification mechanisms and of data protection seals and marks, for the purpose of demonstrating compliance with this Regulation of processing operations by controllers and processors."
+    article_or_recital: "article42: Certification"
+    recitals[1]: "100"
+    answer_span: "The Member States, the supervisory authorities, the Board and the Commission shall encourage, in particular at Union level, the establishment of data protection certification mechanisms and of data protection seals and marks, for the purpose of demonstrating compliance with this Regulation of processing operations by controllers and processors."
+  - id: 38
+    difficulty: medium
+    question: "In Certification, how is the following expressed: 'The Member States'? Provide the exact wording."
+    answer: "The Member States, the supervisory authorities, the Board and the Commission shall encourage, in particular at Union level, the establishment of data protection certification mechanisms and of data protection seals and marks, for the purpose of demonstrating compliance with this Regulation of processing operations by controllers and processors."
+    article_or_recital: "article42: Certification"
+    recitals[1]: "100"
+    answer_span: "The Member States, the supervisory authorities, the Board and the Commission shall encourage, in particular at Union level, the establishment of data protection certification mechanisms and of data protection seals and marks, for the purpose of demonstrating compliance with this Regulation of processing operations by controllers and processors."
+  - id: 39
+    difficulty: easy
+    question: "According to Codes of conduct, what is one key requirement or rule stated?"
+    answer: "The Member States, the supervisory authorities, the Board and the Commission shall encourage the drawing up of codes of conduct intended to contribute to the proper application of this Regulation, taking account of the specific features of the various processing sectors and the specific needs of micro, small and medium-sized enterprises."
+    article_or_recital: "article40: Codes of conduct"
+    recitals[2]: "98","99"
+    answer_span: "The Member States, the supervisory authorities, the Board and the Commission shall encourage the drawing up of codes of conduct intended to contribute to the proper application of this Regulation, taking account of the specific features of the various processing sectors and the specific needs of micro, small and medium-sized enterprises."
+  - id: 40
+    difficulty: medium
+    question: "In Codes of conduct, how is the following expressed: 'The Member States'? Provide the exact wording."
+    answer: "The Member States, the supervisory authorities, the Board and the Commission shall encourage the drawing up of codes of conduct intended to contribute to the proper application of this Regulation, taking account of the specific features of the various processing sectors and the specific needs of micro, small and medium-sized enterprises."
+    article_or_recital: "article40: Codes of conduct"
+    recitals[2]: "98","99"
+    answer_span: "The Member States, the supervisory authorities, the Board and the Commission shall encourage the drawing up of codes of conduct intended to contribute to the proper application of this Regulation, taking account of the specific features of the various processing sectors and the specific needs of micro, small and medium-sized enterprises."
+  - id: 41
+    difficulty: easy
+    question: "According to Binding corporate rules, what is one key requirement or rule stated?"
+    answer: "The competent supervisory authority shall approve binding corporate rules in accordance with the consistency mechanism set out in Article 63, provided that they are legally binding and apply to and are enforced by every member concerned of the group of undertakings, or group of enterprises engaged in a joint economic activity, including their employees;."
+    article_or_recital: "article47: Binding corporate rules"
+    recitals[1]: "110"
+    answer_span: "The competent supervisory authority shall approve binding corporate rules in accordance with the consistency mechanism set out in Article 63, provided that they are legally binding and apply to and are enforced by every member concerned of the group of undertakings, or group of enterprises engaged in a joint economic activity, including their employees;."
+  - id: 42
+    difficulty: medium
+    question: "In Binding corporate rules, how is the following expressed: 'The competent supervisory authority shall approve binding corporate rules in accordance with the consistency mechanism set out in Article 63'? Provide the exact wording."
+    answer: "The competent supervisory authority shall approve binding corporate rules in accordance with the consistency mechanism set out in Article 63, provided that they are legally binding and apply to and are enforced by every member concerned of the group of undertakings, or group of enterprises engaged in a joint economic activity, including their employees;."
+    article_or_recital: "article47: Binding corporate rules"
+    recitals[1]: "110"
+    answer_span: "The competent supervisory authority shall approve binding corporate rules in accordance with the consistency mechanism set out in Article 63, provided that they are legally binding and apply to and are enforced by every member concerned of the group of undertakings, or group of enterprises engaged in a joint economic activity, including their employees;."
+  - id: 43
+    difficulty: easy
+    question: "According to Derogations for specific situations, what is one key requirement or rule stated?"
+    answer: "In the absence of an adequacy decision pursuant to Article 45(3), or of appropriate safeguards pursuant to Article 46, including binding corporate rules, a transfer or a set of transfers of personal data to a third country or an international organisation shall take place only on one of the following conditions:  the data subject has explicitly consented to the proposed transfer, after having been informed of the possible risks of such transfers for the data subject due to the absence of an adequacy decision and appropriate safeguards; This shall not apply to activities carried out by public authorities in the exercise of their public powers."
+    article_or_recital: "article49: Derogations for specific situations"
+    recitals[5]: "111","112","113","114","115"
+    answer_span: "In the absence of an adequacy decision pursuant to Article 45(3), or of appropriate safeguards pursuant to Article 46, including binding corporate rules, a transfer or a set of transfers of personal data to a third country or an international organisation shall take place only on one of the following conditions:  the data subject has explicitly consented to the proposed transfer, after having been informed of the possible risks of such transfers for the data subject due to the absence of an adequacy decision and appropriate safeguards; This shall not apply to activities carried out by public authorities in the exercise of their public powers."
+  - id: 44
+    difficulty: medium
+    question: "In Derogations for specific situations, how is the following expressed: 'In the absence of an adequacy decision pursuant to Article 45(3)'? Provide the exact wording."
+    answer: "In the absence of an adequacy decision pursuant to Article 45(3), or of appropriate safeguards pursuant to Article 46, including binding corporate rules, a transfer or a set of transfers of personal data to a third country or an international organisation shall take place only on one of the following conditions:  the data subject has explicitly consented to the proposed transfer, after having been informed of the possible risks of such transfers for the data subject due to the absence of an adequacy decision and appropriate safeguards; This shall not apply to activities carried out by public authorities in the exercise of their public powers."
+    article_or_recital: "article49: Derogations for specific situations"
+    recitals[5]: "111","112","113","114","115"
+    answer_span: "In the absence of an adequacy decision pursuant to Article 45(3), or of appropriate safeguards pursuant to Article 46, including binding corporate rules, a transfer or a set of transfers of personal data to a third country or an international organisation shall take place only on one of the following conditions:  the data subject has explicitly consented to the proposed transfer, after having been informed of the possible risks of such transfers for the data subject due to the absence of an adequacy decision and appropriate safeguards; This shall not apply to activities carried out by public authorities in the exercise of their public powers."
+  - id: 45
+    difficulty: easy
+    question: "According to Cooperation with the supervisory authority, what is one key requirement or rule stated?"
+    answer: "The controller and the processor and, where applicable, their representatives, shall cooperate, on request, with the supervisory authority in the performance of its tasks."
+    article_or_recital: "article31: Cooperation with the supervisory authority"
+    recitals[0]:
+    answer_span: "The controller and the processor and, where applicable, their representatives, shall cooperate, on request, with the supervisory authority in the performance of its tasks."
+  - id: 46
+    difficulty: medium
+    question: "In Cooperation with the supervisory authority, how is the following expressed: 'The controller and the processor and'? Provide the exact wording."
+    answer: "The controller and the processor and, where applicable, their representatives, shall cooperate, on request, with the supervisory authority in the performance of its tasks."
+    article_or_recital: "article31: Cooperation with the supervisory authority"
+    recitals[0]:
+    answer_span: "The controller and the processor and, where applicable, their representatives, shall cooperate, on request, with the supervisory authority in the performance of its tasks."
+  - id: 47
+    difficulty: easy
+    question: "According to General conditions for imposing administrative fines, what is one key requirement or rule stated?"
+    answer: "Each supervisory authority shall ensure that the imposition of administrative fines pursuant to Article 83 in respect of infringements of this Regulation referred to in Article 83(4)-83(6) shall in each individual case be effective, proportionate and dissuasive."
+    article_or_recital: "article83: General conditions for imposing administrative fines"
+    recitals[3]: "148","150","151"
+    answer_span: "Each supervisory authority shall ensure that the imposition of administrative fines pursuant to Article 83 in respect of infringements of this Regulation referred to in Article 83(4)-83(6) shall in each individual case be effective, proportionate and dissuasive."
+  - id: 48
+    difficulty: medium
+    question: "In General conditions for imposing administrative fines, how is the following expressed: 'Each supervisory authority shall ensure that the imposition of administrative fines pursuant to Article 83 in respect of infringements of this Regulation referred to in Article 83(4)-83(6) shall in each individual case be effective'? Provide the exact wording."
+    answer: "Each supervisory authority shall ensure that the imposition of administrative fines pursuant to Article 83 in respect of infringements of this Regulation referred to in Article 83(4)-83(6) shall in each individual case be effective, proportionate and dissuasive."
+    article_or_recital: "article83: General conditions for imposing administrative fines"
+    recitals[3]: "148","150","151"
+    answer_span: "Each supervisory authority shall ensure that the imposition of administrative fines pursuant to Article 83 in respect of infringements of this Regulation referred to in Article 83(4)-83(6) shall in each individual case be effective, proportionate and dissuasive."
+  - id: 49
+    difficulty: easy
+    question: "According to Information to be provided where personal data have not been obtained from the data subject, what is one key requirement or rule stated?"
+    answer: "Where personal data have not been obtained from the data subject, the controller shall provide the data subject with the following information: the identity and the contact details of the controller and, where applicable, of the controller's representative;."
+    article_or_recital: "article14: Information to be provided where personal data have not been obtained from the data subject"
+    recitals[0]:
+    answer_span: "Where personal data have not been obtained from the data subject, the controller shall provide the data subject with the following information: the identity and the contact details of the controller and, where applicable, of the controller's representative;."
+  - id: 50
+    difficulty: medium
+    question: "In Information to be provided where personal data have not been obtained from the data subject, how is the following expressed: 'Where personal data have not been obtained from the data subject'? Provide the exact wording."
+    answer: "Where personal data have not been obtained from the data subject, the controller shall provide the data subject with the following information: the identity and the contact details of the controller and, where applicable, of the controller's representative;."
+    article_or_recital: "article14: Information to be provided where personal data have not been obtained from the data subject"
+    recitals[0]:
+    answer_span: "Where personal data have not been obtained from the data subject, the controller shall provide the data subject with the following information: the identity and the contact details of the controller and, where applicable, of the controller's representative;."
