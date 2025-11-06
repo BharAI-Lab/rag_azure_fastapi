@@ -9,7 +9,7 @@ on:
 
 permissions:
   contents: read
-  packages: write
+  packages: write     # needed so GITHUB_TOKEN can push to GHCR
   id-token: write
 
 jobs:
@@ -22,30 +22,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Lowercase repo for GHCR path
-        run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
-
-      - name: Validate required secrets
+      - name: Lowercase repo path
         shell: bash
-        run: |
-          if [ -z "${{ secrets.GHCR_USERNAME }}" ]; then
-            echo "Missing GHCR_USERNAME secret"; exit 1
-          fi
-          if [ -z "${{ secrets.PAT }}" ]; then
-            echo "Missing PAT secret"; exit 1
-          fi
+        run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Login to GHCR (push with PAT)
+      # Push with GITHUB_TOKEN so the image is auto-linked to this repo's Packages
+      - name: Login to GHCR (push with GITHUB_TOKEN)
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ secrets.GHCR_USERNAME }}   # e.g., 'surajbhar'
-          password: ${{ secrets.PAT }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build & push image (tag by commit SHA)
+      - name: Build & push image (tag = commit SHA)
         id: push
         uses: docker/build-push-action@v6
         with:
@@ -54,21 +46,24 @@ jobs:
           platforms: linux/amd64
           push: true
           tags: ghcr.io/${{ env.REPO }}:${{ github.sha }}
+          # Add OCI source label so GitHub links the package to this repo
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
           provenance: false
 
       - name: Verify tag exists in GHCR & print digest
         shell: bash
         run: |
-          echo "Expecting tag: ghcr.io/${REPO}:${GITHUB_SHA}"
+          echo "🔎 Checking ghcr.io/${REPO}:${GITHUB_SHA}"
           docker buildx imagetools inspect ghcr.io/${REPO}:${GITHUB_SHA} >/dev/null
-          echo "Tag present. Digest from build-push-action: ${{ steps.push.outputs.digest }}"
+          echo "✅ Tag present. Digest from push: ${{ steps.push.outputs.digest }}"
 
       - name: Expose image ref for deploy
         id: meta
         shell: bash
         run: |
           echo "image_ref=ghcr.io/${REPO}:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
-          echo "image_ref=ghcr.io/${REPO}:${GITHUB_SHA}"
+          echo "📦 image_ref=ghcr.io/${REPO}:${GITHUB_SHA}"
 
   deploy:
     runs-on: ubuntu-latest
@@ -79,25 +74,17 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Lowercase repo for GHCR path
+      - name: Lowercase repo path
+        shell: bash
         run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
-      - name: Validate GHCR secrets exist
-        shell: bash
-        run: |
-          if [ -z "${{ secrets.GHCR_USERNAME }}" ]; then
-            echo "Missing GHCR_USERNAME secret"; exit 1
-          fi
-          if [ -z "${{ secrets.PAT }}" ]; then
-            echo "Missing PAT secret"; exit 1
-          fi
-
-      - name: (Optional) Login to GHCR (read check)
+      # Optional sanity: can we read the exact image from GHCR here too?
+      - name: Login to GHCR (read with GITHUB_TOKEN)
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${{ secrets.GHCR_USERNAME }}
-          password: ${{ secrets.PAT }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Inspect the exact image we will deploy
         shell: bash
@@ -105,7 +92,7 @@ jobs:
           echo "ref:    ${{ needs.build.outputs.image_ref }}"
           echo "digest: ${{ needs.build.outputs.image_digest }}"
           docker buildx imagetools inspect "${{ needs.build.outputs.image_ref }}@${{ needs.build.outputs.image_digest }}" >/dev/null
-          echo "Image digest is readable from GHCR."
+          echo "✅ Image digest is readable from GHCR."
 
       - name: Deploy to Azure Container Apps (by digest)
         uses: azure/CLI@v1
@@ -115,17 +102,17 @@ jobs:
             az config set extension.use_dynamic_install=yes_without_prompt
             az extension add -n containerapp --upgrade -y || true
 
-            # Bind GHCR credentials (PAT owner)
+            # Bind GHCR for ACA pulls with a PAT (private package)
             az containerapp registry set \
               -n ${{ env.AZURE_CONTAINER_APP_NAME }} \
               -g ${{ env.AZURE_GROUP_NAME }} \
               --server ghcr.io \
-              --username ${{ secrets.GHCR_USERNAME }} \
+              --username surajbhar \
               --password ${{ secrets.PAT }}
 
             IMAGE_REF="${{ needs.build.outputs.image_ref }}"
             IMAGE_DIGEST="${{ needs.build.outputs.image_digest }}"
-            echo "Updating ACA to image: ${IMAGE_REF}@${IMAGE_DIGEST}"
+            echo "🚀 Updating ACA to image: ${IMAGE_REF}@${IMAGE_DIGEST}"
 
             az containerapp update \
               -n ${{ env.AZURE_CONTAINER_APP_NAME }} \
