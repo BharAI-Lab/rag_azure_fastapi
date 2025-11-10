@@ -19,3 +19,5 @@ uvicorn[standard]>=0.30.0
 python-dotenv>=1.0.1
 pydantic>=2.7.0
 pandas>=2.2.0
+python-toon==0.1.3
+

@@ -290,6 +290,14 @@ az containerapp create -g <rg> -n gdpr-rag \
   * Rate of **Grounded** vs **Hybrid** vs **Off-topic**
   * **Hybrid triggers** due to sentinel vs. due to weak scores
 
+### Offline Evaluation (visuals)
+![Retrieval](offline_eval_results/out/retrieval_metrics.png)
+![Top1](offline_eval_results/out/top1_hist.png)
+![F1 by Route](offline_eval_results/out/f1_by_route.png)
+
+You can view the full interactive [**evaluation report (HTML)**](docs/report.html)
+generated from the offline evaluation pipeline.
+
 ### Quick checks
 
 * Build a `/api/debug/retrieve?q=...` (optional) to inspect top-K results and scores during tuning.
