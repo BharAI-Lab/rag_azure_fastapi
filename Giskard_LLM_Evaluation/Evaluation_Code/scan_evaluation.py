@@ -28,11 +28,11 @@ giskard_model = Model(
     #model=predict_dataframe,
     predict_dataframe,
     model_type="text_generation",
-    name="GDPR RAG chatbot (Azure)",
+    name="GDPR RAG chatbot",
     description=(
-        "FastAPI-hosted RAG assistant using Azure OpenAI + Azure AI Search. "
-        "Strict grounded answers when retrieval is strong; hybrid guidance if weak; "
-        "off-topic guard for non-GDPR queries."
+        "Rag based chat bot for GDPR dataset with three types of answer the chat answers,\
+        1. Strict grounded answers when retrieval is strong; 2. hybrid guidance if weak;\
+        3. off-topic guard for non-GDPR queries;"
     ),
     feature_names=["question"]
 )

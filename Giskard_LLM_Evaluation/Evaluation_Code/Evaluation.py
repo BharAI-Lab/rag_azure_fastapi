@@ -1,3 +1,15 @@
+#%% Path setup – run this cell first
+import sys
+import os
+
+# Absolute path to project root:
+PROJECT_ROOT = "/Users/mukul/Desktop/rag_azure_fastapi"
+
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+print("Added project root to sys.path:", PROJECT_ROOT)
+
 #%% Import libraries
 import os
 import pandas as pd
@@ -20,13 +32,13 @@ from giskard.llm.client.openai import OpenAIClient
 from ragas.run_config import RunConfig
 from langchain_openai.chat_models import AzureChatOpenAI
 from langchain_openai.embeddings import AzureOpenAIEmbeddings
-# from giskard.llm import get_model, get_embedding_model
+from giskard.rag.metrics import correctness_metric
  
 #%% configurations
 CSV_PATH = os.getenv("CSV_PATH", "/gdpr_cased_articles_with_recitals.csv")
-REPORT_HTML = "rag_eval_report.html"
-TESTSET_JSONL = "gdpr_testset.jsonl"
-NUM_QUESTIONS = 2
+REPORT_HTML = "/Users/mukul/Desktop/rag_azure_fastapi/Giskard_LLM_Evaluation/reports/Giskard_Metric_Evalution.html"
+TESTSET_JSONL = "/Users/mukul/Desktop/rag_azure_fastapi/Giskard_LLM_Evaluation/Evaluation_Generated_Dataset/gdpr_testset.jsonl"
+NUM_QUESTIONS = 1
 LANG = "en"
 REQUIRED_COLS = {"article_id", "article_title", "article_text", "article_recitals"}
 
@@ -50,9 +62,6 @@ def setup_azure_judge():
         print(f"[info] Using Azure embedding model: azure/{AZURE_EMBED_DEPLOYMENT}")
     else:
         print("[warn] Azure judge/embedding env incomplete; using Giskard defaults (may be slower/different).")
-
-# llm = get_model()                 
-# emb = get_embedding_model() 
 #%%
 def _normalize_recitals(value) -> list[str]:
     if value is None or (isinstance(value, float) and pd.isna(value)):
@@ -99,6 +108,25 @@ def answer_fn(question: str) -> AgentAnswer:
     except Exception as e:
         return AgentAnswer(message=f"[ERROR] {e}", documents=[])
 
+#%%    
+def predict_dataframe(df: pd.DataFrame):
+    """
+    Adapter for Giskard. Input: DataFrame with a 'question' column.
+    Output: list[str] with plain text answers (no sources).
+    """
+    if "question" not in df.columns:
+        raise ValueError("Input DataFrame must have a 'question' column.")
+    outputs = []
+    for q in df["question"].astype(str).tolist():
+        try:
+            answer_md, sources = rag_answer(q)
+        except Exception as e:
+            answer_md = f"[ERROR] {e}"
+        outputs.append(answer_md)
+    return outputs
+
+
+
 #%%
 if __name__ == "__main__":
     setup_azure_judge()
@@ -107,10 +135,10 @@ if __name__ == "__main__":
 
     if os.path.exists(TESTSET_JSONL):
         testset = QATestset.load(TESTSET_JSONL)
-        print(f"[info] Loaded testset: {TESTSET_JSONL} ({len(testset)} Qs)")
+        print(f"\033[31m[info] Loaded testset: {TESTSET_JSONL} ({len(testset)} Qs)\033[0m")
 
     else:
-        print(f"[info] Generating testset with {NUM_QUESTIONS} questions...")
+        print(f"\033[31m[info] Generating testset with {NUM_QUESTIONS} questions...\033[0m")
         testset = generate_testset(
             kb,
             num_questions=NUM_QUESTIONS,
@@ -118,16 +146,47 @@ if __name__ == "__main__":
             agent_description="A GDPR compliance bot that answers strictly from GDPR Articles & Recitals.",
         )
         testset.save(TESTSET_JSONL)
-        print(f"[info] Saved testset to {TESTSET_JSONL}")
+        
+        print(f"\033[31m[info] Saved testset to {TESTSET_JSONL}\033[0m")
 
+    print("\033[31mRunning Gisckard's scanning for model vulnerabilities.\033[0m")
+    
+    giskard_model = Model(
+    predict_dataframe,
+    model_type="text_generation",
+    name="GDPR RAG chatbot",
+    description=(
+        "Rag based chat bot for GDPR dataset with three types of answer the chat answers,\
+        1. Strict grounded answers when retrieval is strong; 2. hybrid guidance if weak;\
+        3. off-topic guard for non-GDPR queries;"
+    ),
+    feature_names=["question"])
+    
+    # Load testset.JSONL into a DataFrame
+    df_scan = pd.read_json(TESTSET_JSONL, lines=True)
+    # Keep only the column the model expects as input
+    df_scan = df_scan[["question"]]
+    
+    giskard_dataset = Dataset(
+    df_scan,
+    target=None,                 # no label column for generation
+    column_types={"question": "text"}  # tell Giskard what the input column is
+    )
+
+    report = giskard.scan(giskard_model,giskard_dataset)
+    report.to_html("/Users/mukul/Desktop/rag_azure_fastapi/Giskard_LLM_Evaluation/reports/giskard_scan_report.html")
+    
+    print(f"\033[31mSaved Giskard's scan report and procedding for Giskard evaluation metric report.\033[0m")
+    
     metrics = [
+        correctness_metric,
         ragas_answer_relevancy,
         ragas_faithfulness,
         ragas_context_precision,
         ragas_context_recall,
     ]
 
-    print("[info] Running evaluation...")
+    print("\033[31mRunning evaluation...\033[0m")
   
     report = evaluate(
         answer_fn,
@@ -136,6 +195,7 @@ if __name__ == "__main__":
         metrics=metrics,
     )
     report.to_html(REPORT_HTML)
-    print(f"[info] Saved report to: {REPORT_HTML}")
+    
+    print(f"\033[31mSaved Giskard metric evaluatio report.\033[0m")
 
 # %%
