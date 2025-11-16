@@ -348,7 +348,7 @@ Both reports help validate the reliability, correctness, and robustness of your 
 
 ## Automated Vulnerability & Risk Analysis
 
-**📄 Report File:** : ![Scan Report] (https://htmlpreview.github.io/?https://raw.githubusercontent.com/BharAI-Lab/rag_azure_fastapi/main/Giskard_LLM_Evaluation/reports/Giskard_Scan.html)
+**📄 Report File:** : ![Scan Report](Giskard_LLM_Evaluation/reports/Giskard_Scan.html.html)
 
 
 ![Scan Report](Giskard_LLM_Evaluation/reports/screenshots/scan.png "Giskard Scan Report Preview")
@@ -366,8 +366,7 @@ Both reports help validate the reliability, correctness, and robustness of your 
 | **Correctness Metric**    | Logic + accuracy evaluation                            |
 
 
-**📄 Report File:** : ![Metric Evaluation]
-(https://htmlpreview.github.io/?https://raw.githubusercontent.com/BharAI-Lab/rag_azure_fastapi/main/Giskard_LLM_Evaluation/reports/Giskard_Metric_Evalution.html)
+**📄 Report File:** : ![Metric Evaluation](Giskard_LLM_Evaluation/reports/Giskard_Metric_Evalution.html)
 
 ![Metric Evaluation](Giskard_LLM_Evaluation/reports/screenshots/eval.png "Metric Evaluation Report Preview")
 ![Metric Evaluation](Giskard_LLM_Evaluation/reports/screenshots/eval2.png "Metric Evaluation Report Preview")
