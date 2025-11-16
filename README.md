@@ -348,7 +348,7 @@ Both reports help validate the reliability, correctness, and robustness of your 
 
 ## Automated Vulnerability & Risk Analysis
 
-**📄 Report File:** : ![Scan Report](Giskard_LLM_Evaluation/reports/Giskard_Scan.html.html)
+**📄 Report File:** : ![Scan Report](Giskard_LLM_Evaluation/reports/Giskard_Scan.html)
 
 
 ![Scan Report](Giskard_LLM_Evaluation/reports/screenshots/scan.png "Giskard Scan Report Preview")
