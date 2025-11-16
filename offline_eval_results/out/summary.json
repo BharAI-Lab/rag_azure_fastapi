@@ -1,0 +1,23 @@
+{
+  "n": 50,
+  "retrieval": {
+    "Recall@K": 0.96,
+    "MRR": 0.9333333333333335,
+    "Top1Score.mean": 0.7520161886,
+    "Top1Score.p50": 0.7590761500000001,
+    "Top1Score.p90": 0.818147084
+  },
+  "answering": {
+    "EM": 0.0,
+    "F1": 0.6660749211849176,
+    "Groundedness(when grounded)": 0.96
+  },
+  "routing": {
+    "grounded": 1.0
+  },
+  "hybrid_triggers": {},
+  "latency_sec": {
+    "avg": 2.1907209825515745,
+    "p95": 4.631134355068207
+  }
+}
