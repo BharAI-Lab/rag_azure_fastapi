@@ -30,13 +30,13 @@ Return signature remains unchanged: (answer_markdown: str, sources: list[dict])
 # Clients
 # -----------------------------
 chat_client = AzureOpenAI(
-    azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
-    api_key=settings.AZURE_OPENAI_KEY,
+    azure_endpoint=settings.AZURE_OPENAI_CHAT_DEPLOYMENT,
+    api_key=settings.AZURE_OPENAI_CHAT_DEPLOYMENT_API_KEY,
     api_version=settings.AZURE_OPENAI_API_VERSION,
 )
 
 embeddings = AzureOpenAIEmbeddings(
-    model=settings.AZURE_OPENAI_EMBEDDING_DEPLOYMENT,
+    model=settings.AZURE_OPENAI_EMBEDDING_MODEL_DEPLOYMENT_NAME,
     azure_endpoint=settings.AZURE_OPENAI_ENDPOINT,
     openai_api_key=settings.AZURE_OPENAI_KEY,
 )
@@ -99,7 +99,7 @@ def classify_query(query: str) -> str:
     Uses a tiny LLM call; exact match (no substring bug).
     """
     resp = chat_client.chat.completions.create(
-        model=settings.AZURE_OPENAI_CHAT_DEPLOYMENT,
+        model=settings.AZURE_OPENAI_CHAT_MODEL_DEPLOYMENT_NAME,
         temperature=0,
         max_tokens=3,
         messages=[
@@ -174,7 +174,7 @@ def rag_answer(query: str):
     if intent == "GDPR" and best_score >= STRONG_SCORE:
         # A) Grounded answer (strictly from context)
         grounded = chat_client.chat.completions.create(
-            model=settings.AZURE_OPENAI_CHAT_DEPLOYMENT,
+            model=settings.AZURE_OPENAI_CHAT_MODEL_DEPLOYMENT_NAME,
             temperature=TEMPERATURE,
             max_tokens=MAX_TOKENS,
             messages=[
@@ -187,7 +187,7 @@ def rag_answer(query: str):
         # If model emits sentinel → fallback to hybrid
         if _is_sentinel(text):
             guidance = chat_client.chat.completions.create(
-                model=settings.AZURE_OPENAI_CHAT_DEPLOYMENT,
+                model=settings.AZURE_OPENAI_CHAT_MODEL_DEPLOYMENT_NAME,
                 temperature=TEMPERATURE,
                 max_tokens=MAX_TOKENS,
                 messages=[
@@ -209,7 +209,7 @@ def rag_answer(query: str):
     if intent == "GDPR":
         # B) Hybrid GDPR answer (dataset weak/no match)
         guidance = chat_client.chat.completions.create(
-            model=settings.AZURE_OPENAI_CHAT_DEPLOYMENT,
+            model=settings.AZURE_OPENAI_CHAT_MODEL_DEPLOYMENT_NAME,
             temperature=TEMPERATURE,
             max_tokens=MAX_TOKENS,
             messages=[
@@ -226,7 +226,7 @@ def rag_answer(query: str):
 
     # C) Off-topic neutral answer (NON-GDPR)
     general = chat_client.chat.completions.create(
-        model=settings.AZURE_OPENAI_CHAT_DEPLOYMENT,
+        model=settings.AZURE_OPENAI_CHAT_MODEL_DEPLOYMENT_NAME,
         temperature=TEMPERATURE,
         max_tokens=MAX_TOKENS,
         messages=[
