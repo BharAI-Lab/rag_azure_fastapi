@@ -19,6 +19,14 @@ A Retrieval-Augmented Generation (RAG) chatbot that answers questions about the 
 
 ---
 
+![Knowledge Base Visualisation](online_giskard_evaluation/images/eval2.png)
+
+---
+
+![RAG Evaluation using Giskard and RAGAS](online_giskard_evaluation/images/eval.png)
+
+---
+
 ## Table of Contents
 
 * [Demo](#demo)
