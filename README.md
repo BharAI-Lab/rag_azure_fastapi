@@ -16,6 +16,8 @@ A Retrieval-Augmented Generation (RAG) chatbot that answers questions about the 
 * **RAG Core:** Three-tier logic (Grounded → Hybrid → Off-topic)
 * **Frontend:** Lightweight SPA (HTML/CSS/JS) with citations and a 3D retrieval viz
 * **Deploy:** Docker + (optionally) Azure Container Apps
+![Metric Evaluation](Giskard_LLM_Evaluation/reports/screenshots/eval.png "Metric Evaluation Report Preview")
+![Metric Evaluation](Giskard_LLM_Evaluation/reports/screenshots/eval2.png "Metric Evaluation Report Preview")
 
 ---
 
@@ -276,44 +278,16 @@ az containerapp create -g <rg> -n gdpr-rag \
 
 ---
 
-## Evaluation & Testing
+## LLM Evaluation using Giskard
 
-### What to measure
-
-* **Retrieval**: Recall@K, MRR, top-1 score distribution
-* **Answering**:
-
-  * **Groundedness** (does the answer cite retrieved spans?)
-  * **Exact Match / F1** vs. gold answers for a small curated set (30–50 Q/A)
-* **Routing metrics**:
-
-  * Rate of **Grounded** vs **Hybrid** vs **Off-topic**
-  * **Hybrid triggers** due to sentinel vs. due to weak scores
-
-### Offline Evaluation (visuals)
-![Retrieval](offline_eval_results/out/retrieval_metrics.png)
-![Top1](offline_eval_results/out/top1_hist.png)
-![F1 by Route](offline_eval_results/out/f1_by_route.png)
-
-You can view the full interactive [**evaluation report (HTML)**](docs/report.html)
-generated from the offline evaluation pipeline.
-
-### Quick checks
-
-* Build a `/api/debug/retrieve?q=...` (optional) to inspect top-K results and scores during tuning.
-* Log `{ intent, top1_score, used_branch }` per request for offline analysis.
-
----
-# LLM Evaluation using Giskard
-
-## Comprehensive Information for Evaluating a RAG Pipeline
+### Comprehensive Information for Evaluating a RAG Pipeline
 
 This section explains how to evaluate a Retrieval-Augmented Generation (RAG) chatbot using Giskard, including how to run scan (vulnerability & bias detection) and evaluate (metric-based QA evaluation).
 It is written so that any developer can follow these instructions and adapt them for their own dataset and their own RAG architecture.
 
-# 🧩 Overview
+## Overview
 
- ## `1. giskard.scan()` — **Vulnerability & Risk Detection**
+ ### `1. giskard.scan()` — **Vulnerability & Risk Detection**
 
 - Detects hallucinations
 
@@ -326,7 +300,7 @@ It is written so that any developer can follow these instructions and adapt them
 Produces an HTML scan report summarizing vulnerabilities
 
 ---
-## 2.  giskard.rag.evaluate() — Metric-Based LLM Evaluation
+### 2.  giskard.rag.evaluate() — Metric-Based LLM Evaluation
 
 Evaluates the quality of your RAG answers using:
 
@@ -344,18 +318,18 @@ Produces a detailed HTML evaluation report.
 
 Both reports help validate the reliability, correctness, and robustness of your LLM-based system.
 
-# 🚨 1. Giskard Scan Report
+## 1. Giskard Scan Report
 
-## Automated Vulnerability & Risk Analysis
+### Automated Vulnerability & Risk Analysis
 
 **📄 Report File:** : ![Scan Report](Giskard_LLM_Evaluation/reports/Giskard_Scan.html)
 
 
 ![Scan Report](Giskard_LLM_Evaluation/reports/screenshots/scan.png "Giskard Scan Report Preview")
 
-# 📐 2. Giskard Metric Evaluation Report
+## 📐 2. Giskard Metric Evaluation Report
 
-## Quantitative RAG Performance Evaluation (Ragas + Giskard)
+### Quantitative RAG Performance Evaluation (Ragas + Giskard)
 
 | **Metric**                | **Description**                                       |
 |---------------------------|-------------------------------------------------------|
@@ -370,32 +344,7 @@ Both reports help validate the reliability, correctness, and robustness of your 
 
 ![Metric Evaluation](Giskard_LLM_Evaluation/reports/screenshots/eval.png "Metric Evaluation Report Preview")
 ![Metric Evaluation](Giskard_LLM_Evaluation/reports/screenshots/eval2.png "Metric Evaluation Report Preview")
-
-## Troubleshooting
-
-* **No answer despite known coverage**
-  Check the **top-1 score** coming back from Azure Search and the **threshold** (`RAG_STRONG_SCORE`, default behavior in code). Consider increasing `TOP_K`.
-
-* **Empty sources or “No direct answer found…” often**
-  Verify the **index schema**, **embedding model name**, and that embeddings were generated for both **documents** and (implicitly) the **query** at retrieval time.
-
-* **CORS errors in browser**
-  The API enables permissive CORS for demo. If you changed it, ensure your frontend origin is allowed.
-
-* **Auth/Key errors**
-  Confirm all env vars match the **deployment names** in Azure OpenAI and **keys**/endpoint for Azure AI Search.
-
 ---
-
-## Roadmap
-
-* Add `/healthz` (readiness/liveness) and `/metrics` (Prometheus) endpoints
-* Inline citations (e.g., auto-append `[Article X]` tags) in grounded answers
-* Hybrid retrieval (lexical + vector) for Azure AI Search
-* Evaluation scripts (`/scripts/eval.py`) with a small gold Q/A set
-
----
-
 ## Generate a PAT
 
 The access token will need to be added as an Action secret. [Create one](https://github.com/settings/tokens/new?description=Azure+Container+Apps+access&scopes=write:packages) with enough permissions to write to packages. It is needed because Azure will need to authenticate against the GitHub Container Registry to pull the image.
