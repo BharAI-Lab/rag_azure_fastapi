@@ -38,7 +38,7 @@ from giskard.rag.metrics import correctness_metric
 CSV_PATH = os.getenv("CSV_PATH", "/gdpr_cased_articles_with_recitals.csv")
 REPORT_HTML = "/Users/mukul/Desktop/rag_azure_fastapi/Giskard_LLM_Evaluation/reports/Giskard_Metric_Evalution.html"
 TESTSET_JSONL = "/Users/mukul/Desktop/rag_azure_fastapi/Giskard_LLM_Evaluation/Evaluation_Generated_Dataset/gdpr_testset.jsonl"
-NUM_QUESTIONS = 1
+NUM_QUESTIONS = 50
 LANG = "en"
 REQUIRED_COLS = {"article_id", "article_title", "article_text", "article_recitals"}
 
@@ -174,7 +174,7 @@ if __name__ == "__main__":
     )
 
     report = giskard.scan(giskard_model,giskard_dataset)
-    report.to_html("/Users/mukul/Desktop/rag_azure_fastapi/Giskard_LLM_Evaluation/reports/giskard_scan_report.html")
+    report.to_html("/Users/mukul/Desktop/rag_azure_fastapi/Giskard_LLM_Evaluation/reports/Giskard_Scan.html")
     
     print(f"\033[31mSaved Giskard's scan report and procedding for Giskard evaluation metric report.\033[0m")
     
