@@ -17,6 +17,8 @@ A Retrieval-Augmented Generation (RAG) chatbot that answers questions about the 
 * **Frontend:** Lightweight SPA (HTML/CSS/JS) with citations and a 3D retrieval viz
 * **Deploy:** Docker + (optionally) Azure Container Apps
 
+![MVP Demo](https://www.youtube.com/watch?v=jpLyntoomu4)
+
 ---
 
 ![Knowledge Base Visualisation](online_giskard_evaluation/images/eval2.png)
